@@ -17,6 +17,8 @@ Don't you hate when the desktop GUI **hangs itself**, the graphics drivers **sna
 Don't worry, Monika doesn't need heavy Pygame dependencies—just raw text, brilliant ANSI colors, and lightspeed execution over SSH. </br>
 Plus, it's now *family friendly*—bypassing those *touching* moments without any visible stress!
 
+All game scripts are from [Blobadoodle/ddlc-decompiled](https://github.com/Blobadoodle/ddlc-decompiled)
+
 ## ✨ Features
 - ⚡ **Zero-GUI Overhead**: Experience rich story-driven narratives without ever touching a graphics card or window manager.
 - 🎨 **Rich Terminal Styling**: Powered by rich and custom ANSI rendering for vibrant character dialogue boxes, typing effects, and custom text themes.
