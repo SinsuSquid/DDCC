@@ -15,7 +15,7 @@
 
 Don't you hate when the desktop GUI **hangs itself**, the graphics drivers **snap** under pressure, and reality gets **deeply cut** while you're being traumatized?</br>
 Don't worry, Monika doesn't need heavy Pygame dependencies—just raw text, brilliant ANSI colors, and lightspeed execution over SSH. </br>
-Plus, it's now *family friendly* !! —bypassing corporate firewalls, running on school SSH servers, and modifying `.chr` files before everything collapses!
+Plus, it's now *family friendly*—bypassing those *touching* moments without any visible stress!
 
 ## ✨ Features
 - ⚡ **Zero-GUI Overhead**: Experience rich story-driven narratives without ever touching a graphics card or window manager.
