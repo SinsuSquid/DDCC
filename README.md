@@ -25,9 +25,3 @@ All game scripts are from [Blobadoodle/ddlc-decompiled](https://github.com/Bloba
 - 🐚 **Pure Hacker Aesthetic**: Includes custom terminal-native features—scripted delays, terminal bell sound-effects, and custom ASCII title cards.
 - 🖥️ **Run Everywhere**: Perfect for low-spec hardware, remote servers, Linux tty, or just flexing on your terminal rice setup.
 - 🛡️ **Trauma-Safe**: You can bypass intense jumpscares, flickering text flashes, or triggering narrative beats for a safer reading experience.
-
-## 🎀 The Clubroom Architecture
-- 🪢 **Sayori's Thread Management**: Built with clean thread execution so your terminal process never leaves you *hanging*... (just remember to *gently open* the shell session!).
-- 🔪 **Yuri's Sharpest Execution**: A script parser so *cutting*-edge and deeply sharp, it slices through `.rpy` files without spilling a single drop of unhandled exceptions.
-- 🧁 **Natsuki's Bite-Sized Footprint**: Ultra-compact, *snappy*, and sweet—underfed on heavy dependencies so it runs smooth on even the lowest-spec hardware without snapping under pressure.
-- 👁️ **Monika's Root Privileges**: *Full control* over environment variables. Who needs a GUI when you hold full `sudo` privileges over the player's session? (WARNING: Never run `DDLC.sh` with root privilege.)
