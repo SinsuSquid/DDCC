@@ -22,7 +22,6 @@ All game scripts are from [Blobadoodle/ddlc-decompiled](https://github.com/Bloba
 ## ✨ Features
 - ⚡ **Zero-GUI Overhead**: Experience rich story-driven narratives without ever touching a graphics card or window manager.
 - 🎨 **Rich Terminal Styling**: Powered by rich and custom ANSI rendering for vibrant character dialogue boxes, typing effects, and custom text themes.
-- 🛠️ **Lightweight Script Engine**: A custom-built Python `.rpy` parser that reads character tags, dialogue, variables, and branching decision trees effortlessly.
 - 🐚 **Pure Hacker Aesthetic**: Includes custom terminal-native features—scripted delays, terminal bell sound-effects, and custom ASCII title cards.
 - 🖥️ **Run Everywhere**: Perfect for low-spec hardware, remote servers, Linux tty, or just flexing on your terminal rice setup.
 - 🛡️ **Trauma-Safe**: You can bypass intense jumpscares, flickering text flashes, or triggering narrative beats for a safer reading experience.
