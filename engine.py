@@ -596,8 +596,7 @@ def load_all_scripts(game_scripts_dir: str):
 def find_node_by_line(root_node: ASTNode, filepath: str, line_num: int) -> Optional[ASTNode]:
     if not filepath or not line_num:
         return None
-    # Compare basenames to tolerate absolute/relative path differences
-    if os.path.basename(root_node.filepath) != os.path.basename(filepath):
+    if root_node.filepath and os.path.basename(root_node.filepath) != os.path.basename(filepath):
         return None
         
     def search(node):

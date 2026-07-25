@@ -158,7 +158,7 @@ class RPYParser:
             lines = f.readlines()
 
         # Root node of the file AST
-        root = ASTNode("root", 0, {"file": file_path}, -1)
+        root = ASTNode("root", 0, {"file": file_path}, -1, filepath=file_path)
         
         # A stack to keep track of active parent nodes based on indentation levels.
         # Format of elements: (indentation_level, ASTNode)
