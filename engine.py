@@ -78,6 +78,67 @@ CHARACTER_STYLES = {
 }
 
 
+def convert_renpy_markup(text: str) -> str:
+    if not text:
+        return text
+
+    # Strip pause/wait tags like {w}, {w=1.0}, {nw}, {fast}
+    text = re.sub(r"\{w(?:=[^}])?\}", "", text)
+    text = re.sub(r"\{nw\}", "", text)
+    text = re.sub(r"\{fast\}", "", text)
+    text = re.sub(r"\{p(?:=[^}])?\}", "", text)
+
+    # Basic styling tags
+    text = text.replace("{i}", "[italic]").replace("{/i}", "[/italic]")
+    text = text.replace("{b}", "[bold]").replace("{/b}", "[/bold]")
+    text = text.replace("{u}", "[underline]").replace("{/u}", "[/underline]")
+    text = text.replace("{s}", "[strike]").replace("{/s}", "[/strike]")
+
+    # Color tags: {color=#fff} -> [color=#fff], {/color} -> [/color]
+    text = re.sub(r"\{color=([^}]+)\}", r"[\1]", text)
+    text = text.replace("{/color}", "[/]")
+
+    # Size and font tags
+    text = re.sub(r"\{size=[^}]+\}", "", text).replace("{/size}", "")
+    text = re.sub(r"\{cps=[^}]+\}", "", text).replace("{/cps}", "")
+    text = re.sub(r"\{font=[^}]+\}", "", text).replace("{/font}", "")
+
+    return text
+
+
+def close_open_rich_tags(s: str) -> str:
+    open_tags = []
+    tokens = re.finditer(r"\[(/?[a-zA-Z0-9_#]*)\]", s)
+    for m in tokens:
+        tag = m.group(1)
+        if not tag:
+            continue
+        if tag == "/":
+            if open_tags:
+                open_tags.pop()
+        elif tag.startswith("/"):
+            target_tag = tag[1:]
+            if target_tag in open_tags:
+                open_tags.remove(target_tag)
+            elif open_tags:
+                open_tags.pop()
+        else:
+            open_tags.append(tag)
+            
+    for tag in reversed(open_tags):
+        s += f"[/{tag}]"
+    return s
+
+
+def safe_render_markup(raw_text: str, base_style: str = "white") -> Text:
+    converted = convert_renpy_markup(raw_text)
+    closed = close_open_rich_tags(converted)
+    try:
+        return Text.from_markup(closed, style=base_style)
+    except Exception:
+        return Text(raw_text, style=base_style)
+
+
 def get_character_name(char_id: str, state: Dict[str, Any]) -> str:
     """
     Returns the current name of the character based on the state variable.
@@ -250,9 +311,8 @@ def display_dialogue(char_id: str, text: str, engine: 'DDCCEngine', delay: float
     # Bottom menu status
     panel_subtitle = " [bold dim]Next: [Space] | Auto: [A] | Skip: [S] | Save: [G][/bold dim] "
     
-    text_renderable = Text(display_text, style=style_info["color"])
     panel = Panel(
-        text_renderable, 
+        safe_render_markup(display_text, style_info["color"]), 
         title=panel_title, 
         subtitle=panel_subtitle, 
         subtitle_align="right", 
@@ -273,7 +333,7 @@ def display_dialogue(char_id: str, text: str, engine: 'DDCCEngine', delay: float
                     
                 if not fast_forwarded:
                     display_text += char
-                    text_renderable.plain = display_text
+                    panel.renderable = safe_render_markup(display_text, style_info["color"])
                     live.refresh()
                     if current_delay > 0:
                         time.sleep(current_delay)
@@ -297,7 +357,7 @@ def display_dialogue(char_id: str, text: str, engine: 'DDCCEngine', delay: float
                             live.refresh()
                             
                         display_text = text
-                        text_renderable.plain = display_text
+                        panel.renderable = safe_render_markup(display_text, style_info["color"])
                         live.refresh()
                         fast_forwarded = True
                         break
@@ -305,7 +365,7 @@ def display_dialogue(char_id: str, text: str, engine: 'DDCCEngine', delay: float
                     break
                     
             # Make sure full text is visible
-            text_renderable.plain = text
+            panel.renderable = safe_render_markup(text, style_info["color"])
             live.refresh()
             
             # In skip mode, check if the user pressed any key to cancel the skip
@@ -322,7 +382,7 @@ def display_dialogue(char_id: str, text: str, engine: 'DDCCEngine', delay: float
                 
             # 2. Waiting or Auto-advancing
             if IS_TTY:
-                text_renderable.plain = text + " █"
+                panel.renderable = safe_render_markup(text + " █", style_info["color"])
                 live.refresh()
                 
                 # Fast-forward input flush to prevent accidental skipped pages
@@ -347,7 +407,7 @@ def display_dialogue(char_id: str, text: str, engine: 'DDCCEngine', delay: float
                             break
                     
                     if not auto_cancelled:
-                        text_renderable.plain = text
+                        panel.renderable = safe_render_markup(text, style_info["color"])
                         live.refresh()
                         return
                         
@@ -372,7 +432,7 @@ def display_dialogue(char_id: str, text: str, engine: 'DDCCEngine', delay: float
                         panel.subtitle = panel_subtitle
                         live.refresh()
                         
-                text_renderable.plain = text
+                panel.renderable = safe_render_markup(text, style_info["color"])
                 live.refresh()
     finally:
         restore_cbreak()
