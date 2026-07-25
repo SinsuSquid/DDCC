@@ -2,6 +2,7 @@ import os
 import re
 import sys
 import time
+import textwrap
 import readchar
 from typing import List, Dict, Any, Optional
 from rich.console import Console
@@ -816,6 +817,16 @@ def find_node_by_line(root_node: ASTNode, filepath: str, line_num: int) -> Optio
     return search(root_node)
 
 
+def is_json_serializable(val):
+    if val is None or isinstance(val, (int, float, str, bool)):
+        return True
+    if isinstance(val, list):
+        return all(is_json_serializable(x) for x in val)
+    if isinstance(val, dict):
+        return all(isinstance(k, str) and is_json_serializable(v) for k, v in val.items())
+    return False
+
+
 def save_game(engine: 'DDCCEngine'):
     import json
     save_data = {
@@ -834,6 +845,7 @@ def save_game(engine: 'DDCCEngine'):
         "state_vars": {
             k: v for k, v in engine.state.items()
             if k not in ("renpy", "style", "audio", "delete_character", "restore_all_characters", "restore_relevant_characters", "pause", "config", "persistent")
+            and is_json_serializable(v)
         },
         "persistent_vars": {
             k: getattr(engine.state["persistent"], k)
@@ -973,9 +985,19 @@ class DDCCEngine:
         self.state["restore_relevant_characters"] = self.restore_relevant_characters
         self.state["pause"] = self.pause
 
-        # Execute defines in definitions.rpy to register BGM and properties
-        if "definitions.rpy" in self.parsed_files:
-            self.execute_defines(self.parsed_files["definitions.rpy"])
+        # Execute defines and init python blocks across all parsed files
+        for filename, root_node in self.parsed_files.items():
+            self.execute_defines(root_node)
+            self.execute_init_python_blocks(root_node)
+
+    def execute_init_python_blocks(self, root_node: ASTNode):
+        def run_init(node):
+            if node.node_type == "python_block":
+                self.execute_python_block(node)
+            for child in node.children:
+                run_init(child)
+
+        run_init(root_node)
 
     def execute_defines(self, root_node: ASTNode):
         def run_define(node):
@@ -1085,11 +1107,11 @@ class DDCCEngine:
             raise ValueError(f"Label not found: {label_name}")
 
     def execute_python_block(self, node: ASTNode):
-        code = "".join(node.content["lines"])
+        raw_code = "".join(node.content.get("lines", []))
+        code = textwrap.dedent(raw_code)
         try:
             exec(code, {}, self.state)
-        except Exception as e:
-            # Silently pass or log logic exceptions
+        except Exception:
             pass
 
     def bind_call_args(self, args_str: str):
