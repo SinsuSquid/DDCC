@@ -23,11 +23,40 @@ if IS_TTY:
         import msvcrt  # Windows
         def kbhit():
             return msvcrt.kbhit()
+        def set_cbreak():
+            pass
+        def restore_cbreak():
+            pass
     except ImportError:
-        import select  # Unix / Linux / macOS
+        import select, tty, termios  # Unix / Linux / macOS
+        _fd = sys.stdin.fileno()
+        _old_settings = None
+
+        def set_cbreak():
+            global _old_settings
+            try:
+                if _old_settings is None:
+                    _old_settings = termios.tcgetattr(_fd)
+                    tty.setcbreak(_fd)
+            except Exception:
+                pass
+
+        def restore_cbreak():
+            global _old_settings
+            if _old_settings is not None:
+                try:
+                    termios.tcsetattr(_fd, termios.TCSAFLUSH, _old_settings)
+                except Exception:
+                    pass
+                _old_settings = None
+
         def kbhit():
             return select.select([sys.stdin], [], [], 0)[0] != []
 else:
+    def set_cbreak():
+        pass
+    def restore_cbreak():
+        pass
     def kbhit():
         return False
 
@@ -231,32 +260,110 @@ def display_dialogue(char_id: str, text: str, engine: 'DDCCEngine', delay: float
         width=80
     )
     
-    # Single Live context block for smooth renders and zero flicker
-    with Live(panel, auto_refresh=False) as live:
-        fast_forwarded = False
-        
-        # 1. Typewriter effect
-        for char in text:
+    set_cbreak()
+    try:
+        # Single Live context block for smooth renders and zero flicker
+        with Live(panel, auto_refresh=False) as live:
+            fast_forwarded = False
+            
+            # 1. Typewriter effect
+            for char in text:
+                if is_skipping:
+                    break
+                    
+                if not fast_forwarded:
+                    display_text += char
+                    text_renderable.plain = display_text
+                    live.refresh()
+                    if current_delay > 0:
+                        time.sleep(current_delay)
+                    
+                    # Check for inputs during typing
+                    if kbhit():
+                        key = read_key_safe()
+                        if key in ("a", "A"):
+                            state["auto_mode"] = not state.get("auto_mode", False)
+                            state["skip_mode"] = False
+                        elif key in ("s", "S"):
+                            state["skip_mode"] = not state.get("skip_mode", False)
+                            state["auto_mode"] = False
+                            is_skipping = state["skip_mode"]
+                        elif key in ("g", "G"):
+                            save_game(engine)
+                            panel.subtitle = " [bold green]Game Saved![/] "
+                            live.refresh()
+                            time.sleep(0.8)
+                            panel.subtitle = panel_subtitle
+                            live.refresh()
+                            
+                        display_text = text
+                        text_renderable.plain = display_text
+                        live.refresh()
+                        fast_forwarded = True
+                        break
+                else:
+                    break
+                    
+            # Make sure full text is visible
+            text_renderable.plain = text
+            live.refresh()
+            
+            # In skip mode, check if the user pressed any key to cancel the skip
             if is_skipping:
-                break
+                for _ in range(8):
+                    time.sleep(0.01)
+                    if kbhit():
+                        read_key_safe()
+                        state["skip_mode"] = False
+                        is_skipping = False
+                        break
+                if is_skipping:
+                    return
                 
-            if not fast_forwarded:
-                display_text += char
-                text_renderable.plain = display_text
+            # 2. Waiting or Auto-advancing
+            if IS_TTY:
+                text_renderable.plain = text + " █"
                 live.refresh()
-                if current_delay > 0:
-                    time.sleep(current_delay)
                 
-                # Check for inputs during typing
-                if kbhit():
+                # Fast-forward input flush to prevent accidental skipped pages
+                if fast_forwarded:
+                    time.sleep(0.15)
+                    while kbhit():
+                        read_key_safe()
+                        
+                # Auto mode advance
+                if state.get("auto_mode", False):
+                    wait_time = 1.0 + len(text) * 0.03
+                    elapsed = 0.0
+                    auto_cancelled = False
+                    while elapsed < wait_time:
+                        time.sleep(0.05)
+                        elapsed += 0.05
+                        if kbhit():
+                            # Any keypress cancels auto mode
+                            read_key_safe()
+                            state["auto_mode"] = False
+                            auto_cancelled = True
+                            break
+                    
+                    if not auto_cancelled:
+                        text_renderable.plain = text
+                        live.refresh()
+                        return
+                        
+                # Normal keyboard waiting loop
+                while True:
                     key = read_key_safe()
-                    if key in ("a", "A"):
+                    if key in (readchar.key.SPACE, " "):
+                        break
+                    elif key in ("a", "A"):
                         state["auto_mode"] = not state.get("auto_mode", False)
                         state["skip_mode"] = False
+                        break
                     elif key in ("s", "S"):
                         state["skip_mode"] = not state.get("skip_mode", False)
                         state["auto_mode"] = False
-                        is_skipping = state["skip_mode"]
+                        break
                     elif key in ("g", "G"):
                         save_game(engine)
                         panel.subtitle = " [bold green]Game Saved![/] "
@@ -265,83 +372,11 @@ def display_dialogue(char_id: str, text: str, engine: 'DDCCEngine', delay: float
                         panel.subtitle = panel_subtitle
                         live.refresh()
                         
-                    display_text = text
-                    text_renderable.plain = display_text
-                    live.refresh()
-                    fast_forwarded = True
-            else:
-                break
-                
-        # Make sure full text is visible
-        text_renderable.plain = text
-        live.refresh()
-        
-        # In skip mode, check if the user pressed any key to cancel the skip
-        if is_skipping:
-            for _ in range(8):
-                time.sleep(0.01)
-                if kbhit():
-                    read_key_safe()
-                    state["skip_mode"] = False
-                    is_skipping = False
-                    break
-            if is_skipping:
-                return
-            
-        # 2. Waiting or Auto-advancing
-        if IS_TTY:
-            text_renderable.plain = text + " █"
-            live.refresh()
-            
-            # Fast-forward input flush to prevent accidental skipped pages
-            if fast_forwarded:
-                time.sleep(0.15)
-                while kbhit():
-                    read_key_safe()
-                    
-            # Auto mode advance
-            if state.get("auto_mode", False):
-                wait_time = 1.0 + len(text) * 0.03
-                elapsed = 0.0
-                auto_cancelled = False
-                while elapsed < wait_time:
-                    time.sleep(0.05)
-                    elapsed += 0.05
-                    if kbhit():
-                        # Any keypress cancels auto mode
-                        read_key_safe()
-                        state["auto_mode"] = False
-                        auto_cancelled = True
-                        break
-                
-                if not auto_cancelled:
-                    text_renderable.plain = text
-                    live.refresh()
-                    return
-                    
-            # Normal keyboard waiting loop
-            while True:
-                key = read_key_safe()
-                if key in (readchar.key.SPACE, " "):
-                    break
-                elif key in ("a", "A"):
-                    state["auto_mode"] = not state.get("auto_mode", False)
-                    state["skip_mode"] = False
-                    break
-                elif key in ("s", "S"):
-                    state["skip_mode"] = not state.get("skip_mode", False)
-                    state["auto_mode"] = False
-                    break
-                elif key in ("g", "G"):
-                    save_game(engine)
-                    panel.subtitle = " [bold green]Game Saved![/] "
-                    live.refresh()
-                    time.sleep(0.8)
-                    panel.subtitle = panel_subtitle
-                    live.refresh()
-                    
-            text_renderable.plain = text
-            live.refresh()
+                text_renderable.plain = text
+                live.refresh()
+    finally:
+        restore_cbreak()
+
 def play_poem_game(state: Dict[str, Any]):
     """
     Interactive terminal-native Poem Writing Game.
