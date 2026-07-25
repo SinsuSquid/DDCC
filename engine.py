@@ -463,6 +463,52 @@ def display_dialogue(char_id: str, text: str, engine: 'DDCCEngine', delay: float
     finally:
         restore_cbreak()
 
+
+def display_poem(poem_obj: Any, engine: 'DDCCEngine'):
+    """
+    Displays a character's handwritten poem in a styled Rich panel and waits for user keypress.
+    """
+    if not poem_obj:
+        return
+
+    title = getattr(poem_obj, "title", "Untitled Poem")
+    author = getattr(poem_obj, "author", "unknown").lower()
+    text = getattr(poem_obj, "text", "")
+
+    style_info = CHARACTER_STYLES.get(author[0] if author else "m", {
+        "name": author.capitalize(),
+        "color": "bold white",
+        "border": "cyan"
+    })
+    author_name = get_character_name(author[0] if author else "m", engine.state)
+    if not author_name or author_name == author[0]:
+        author_name = author.capitalize()
+
+    poem_text_renderable = safe_render_markup(text, style_info["color"])
+    panel_title = f"[{style_info['color']}]📜 {title} — {author_name}[/]"
+    panel_subtitle = " [bold dim]Press [Space] to finish reading poem[/bold dim] "
+
+    panel = Panel(
+        poem_text_renderable,
+        title=panel_title,
+        subtitle=panel_subtitle,
+        subtitle_align="right",
+        border_style=style_info["border"],
+        width=74,
+        padding=(1, 3)
+    )
+
+    set_cbreak()
+    try:
+        with Live(panel, auto_refresh=False) as live:
+            live.refresh()
+            while True:
+                key = read_key_safe()
+                if key in (readchar.key.SPACE, readchar.key.ENTER, " ", "\r", "\n"):
+                    break
+    finally:
+        restore_cbreak()
+
 def play_poem_game(state: Dict[str, Any]):
     """
     Interactive terminal-native Poem Writing Game.
@@ -1021,12 +1067,50 @@ class DDCCEngine:
             # Silently pass or log logic exceptions
             pass
 
+    def bind_call_args(self, args_str: str):
+        if not args_str:
+            return
+        try:
+            pos_args = []
+            kw_args = {}
+            def mock_func(*args, **kwargs):
+                nonlocal pos_args, kw_args
+                pos_args = args
+                kw_args = kwargs
+            exec(f"mock_func({args_str})", self.state, {"mock_func": mock_func})
+
+            if pos_args:
+                self.state["poem"] = pos_args[0]
+            for k, v in kw_args.items():
+                self.state[k] = v
+        except Exception:
+            pass
+
     def handle_command(self, cmd: str, args: str):
         if cmd == "scene":
             console.print(f"[dim yellow]🎬 Scene changes to: {args}[/]")
         elif cmd == "show":
-            console.print(f"[dim yellow]🎭 Character enters: {args}[/]")
+            if args.startswith("screen poem"):
+                match = re.search(r"screen\s+poem\s*\(([^,\)]+)", args)
+                if match:
+                    expr = match.group(1).strip()
+                    try:
+                        poem_obj = eval(expr, {}, self.state)
+                        if poem_obj:
+                            display_poem(poem_obj, self)
+                            return
+                    except Exception:
+                        pass
+                poem_obj = self.state.get("poem")
+                if poem_obj:
+                    display_poem(poem_obj, self)
+                    return
+                console.print(f"[dim yellow]📜 Displaying Poem[/]")
+            else:
+                console.print(f"[dim yellow]🎭 Character enters: {args}[/]")
         elif cmd == "hide":
+            if args.startswith("screen poem") or args == "screen poem":
+                return
             console.print(f"[dim yellow]🎭 Character leaves: {args}[/]")
         elif cmd == "play":
             parts = args.split(None, 1)
@@ -1074,6 +1158,9 @@ class DDCCEngine:
 
         elif node.node_type in ("call", "call_expr"):
             target = node.content.get("label") or node.content.get("expr")
+            args_str = node.content.get("args")
+            if args_str:
+                self.bind_call_args(args_str)
             self.call(target)
 
         elif node.node_type == "return":
