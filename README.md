@@ -3,8 +3,9 @@
 ![](https://img.shields.io/badge/💚_Just-Monika-green)
 ![](https://img.shields.io/badge/Python-3.7%2B-blue)
 ![](https://img.shields.io/badge/CLI-Terminal_Visual_Novel-pink)
+![](https://img.shields.io/badge/Puns-100%25_Freshly_Baked-yellow)
 
-> *"Welcome to the Literature Club... now running directly inside your favorite terminal interface."* 💚
+> *"Welcome to the Literature Club! Write your way into her heart... directly inside your favorite terminal interface."* 💚
 
 ```
 ┌──────────────────────────────────────────────────────────┐
@@ -13,13 +14,15 @@
 └──────────────────────────────────────────────────────────┘
 ```
 
-**Doki Doki CLI Club! (DDCC)** is an ultra-lightweight, high-performance command-line interpreter that plays *Doki Doki Literature Club* directly within your terminal. 
+**Doki Doki CLI Club! (DDCC)** is an ultra-lightweight, high-performance command-line visual novel engine that **cuts** through GUI overhead and lets you **hang** out with the Literature Club in pure ASCII glory.
 
-Enjoy rich dialogue, interactive menus, character-accurate color themes, full Ren'Py text tag markup, character poem readers, and an in-place TUI poem writing minigame—all powered by Python, [rich](https://pypi.org/project/rich/), and [readchar](https://pypi.org/project/readchar/).
+Whether you're **baked** into SSH sessions or just want a **byte-sized** poem reading experience, DDCC brings the full psychological horror and wholesome clubroom vibes directly to your shell—with **no strings attached!** 🧵
 
 ---
 
 ## 📸 Memorable Moments
+
+> *"I gently open the door..."* (Spoiler: Don't **hang** around too long!) 💔
 
 | *"I gently open the door."* | Character File Deletion Indicator |
 | :---: | :---: |
@@ -27,31 +30,30 @@ Enjoy rich dialogue, interactive menus, character-accurate color themes, full Re
 
 ---
 
-## ✨ Key Features
+## ✨ Key Features (Freshly Baked & Sharp!)
 
-* ⚡ **Zero-GUI Overhead**: Read the visual novel directly over SSH, in headless environments, or in your favorite terminal emulator.
-* 🎨 **Character Theme Styling**:
-  * 🩵 **Sayori**: Sky Blue (`sky_blue1`)
-  * 🩷 **Natsuki**: Pastel Pink (`pink1`)
-  * 💚 **Monika**: Emerald Green (`green`)
-  * 💜 **Yuri**: Deep Purple (`purple`)
-* 📜 **Dedicated TUI Poem Console Reader**: Renders character handwritten poems (`poem_s1`, `poem_n1`, `poem_y1`, `poem_m1`, special poems) inside styled Rich panels matching each girl's color scheme, complete with in-game hotkeys (`Space` to finish reading, `[G]` to save, `[L]` to load) and clean terminal history logs.
-* 📖 **Ren'Py Text Tag Markup**: Parses and translates `{i}` (italics), `{b}` (bold), `{u}` (underline), `{s}` (strikethrough), and `{color=...}` tags into Rich terminal styles in real-time, with automatic tag closing during typewriter animations.
+* ⚡ **Zero-GUI Overhead**: **Cut** through bloated graphics! Play over SSH, headless servers, or inside your favorite terminal emulator.
+* 🎨 **Character-Accurate Palette (Coloring outside the lines!)**:
+  * 🩵 **Sayori**: Sky Blue (`sky_blue1`) — *Don't leave her hanging!*
+  * 🩷 **Natsuki**: Pastel Pink (`pink1`) — *Freshly baked aesthetics, because **Manga IS Literature!***
+  * 💜 **Yuri**: Deep Purple (`purple`) — *A sharp, cutting-edge style that gets straight to the point.*
+  * 💚 **Monika**: Emerald Green (`green`) — *Just Monika. Period.*
+* 📜 **Dedicated TUI Poem Reader**: Read handwritten poems (`poem_s1`, `poem_y1`, `poem_n1`, `poem_m1`) rendered inside **picture-perfect** Rich paper panels.
+* 📖 **Ren'Py Text Tag Markup**: Automatically parses `{i}` (italics), `{b}` (bold), `{u}` (underline), `{s}` (strikethrough), and `{color=...}` tags. Unclosed tags are automatically **bound** frame-by-frame during typewriter typing!
 * 🎮 **Bottom Dialogue Quick-Menu**:
-  * `[Space]` : Advance to the next line of dialogue / fast-forward typewriter.
-  * `[A]` : Toggle **Auto-Play** mode (automatically advances after reading delays).
-  * `[S]` : Toggle **Skip Mode** (instantly fast-forwards; press any key to interrupt).
+  * `[Space]` : Advance to the next line of dialogue (or **fast-forward** the pen!).
+  * `[A]` : Toggle **Auto-Play** mode (*look ma, no hands!*).
+  * `[S]` : Toggle **Skip Mode** (*fast-forward at neck-breaking speeds!*).
   * `[G]` : **Save Game** state to disk (`savegame.json`).
-  * `[L]` : **Load Game** state from disk (available in-game and at initial launch).
-* 📝 **In-Place Split TUI Poem Minigame**: Refactored to render within a single `Live` panel block (zero terminal scroll clutter), featuring a 2-column layout displaying word choices on the left, and live progress, girl appeal scores, and recent word history on the right.
-* 🎯 **In-Place TUI Decision Menus**: Interactive choice selection with embedded prompt headers, keyboard navigation (`Up/Down`, `W/S`), and in-place frame updates.
-* 🔀 **Dynamic Ren'Py Control Flow**: Full AST parser support for `call expression` and `jump expression` statements, evaluating dynamic script variables (`poemwinner`, `nextscene`) against runtime game state.
-* 💾 **Bulletproof JSON Save System**: Trial-validated state serialization that safely filters runtime classes, functions, and modules to guarantee error-free save file generation.
-* ⚙️ **On-The-Fly RPA Unpacker & Decompiler**: Automatically extracts `.rpyc` script bytecode from official RPA archives and decompiles them into `.rpy` source scripts using `rpycdec`.
+  * `[L]` : **Load Game** state from disk (don't worry, Monika didn't delete it... *yet*).
+* 📝 **In-Place Split TUI Poem Minigame**: A side-by-side split TUI layout where Sayori **bounces**, Natsuki **hops**, and Yuri **smiles** in real-time as you pick words!
+* 🎯 **In-Place TUI Decision Menus**: Make club choices without scrolling pollution! Options update in-place with `Up/Down` or `W/S` keys.
+* 🔀 **Dynamic Ren'Py Flow Control**: Evaluates dynamic Ren'Py call expressions (`call expression poemwinner[0] + "_exclusive"`) on the fly.
+* 💾 **Bulletproof JSON Save System**: Trial-tested JSON serialization that **deletes** bad save bugs before Monika can delete your character files.
 
 ---
 
-## 🚀 Setup & Execution
+## 🚀 Setup & Execution (Piece of Cake! 🧁)
 
 ### 1. Prerequisites
 Ensure you have Python 3.7+ installed. Install the required dependencies:
@@ -63,7 +65,7 @@ pip install rich readchar rpycdec
 Place the official PC game directory named **`DDLC-1.1.1-pc`** into the root of this repository. Your directory layout should look like this:
 ```
 DDCC/
-├── DDLC-1.1.1-pc/       # Place the official DDLC game directory here
+├── DDLC-1.1.1-pc/       # Place official DDLC game directory here
 ├── decompile_scripts.py
 ├── engine.py
 ├── parser.py
@@ -72,11 +74,11 @@ DDCC/
 ```
 
 ### 3. Extract & Decompile Scripts
-Run the extraction utility to unpack `.rpa` archives and decompile `.rpyc` bytecode into readable `.rpy` scripts:
+Unpack `.rpa` archives and decompile `.rpyc` bytecode into readable `.rpy` scripts:
 ```bash
 python decompile_scripts.py
 ```
-*This generates a `game_scripts/` directory containing all game `.rpy` source files.*
+*This **unzips** the secret recipe into `game_scripts/`!*
 
 ### 4. Run the Game!
 Start the visual novel interpreter:
@@ -100,8 +102,12 @@ python engine.py
 
 ---
 
-## 🛠️ Architecture Overview
+## 🛠️ Architecture Overview (Behind the Scenes!)
 
 * **[decompile_scripts.py](file:///home/bgkang/Projects/DDCC/decompile_scripts.py)**: Extracts `scripts.rpa`, runs `rpycdec` bytecode decompilation to `.rpy`, and cleans up output folders.
 * **[parser.py](file:///home/bgkang/Projects/DDCC/parser.py)**: Indentation-based Ren'Py syntax parser. Constructs structured AST nodes (`label`, `dialogue`, `if/elif/else`, `menu`, `call_expr`, `jump_expr`, `python_block`).
 * **[engine.py](file:///home/bgkang/Projects/DDCC/engine.py)**: Main runtime engine. Features non-blocking TTY input handling, state sandbox evaluation, Rich panel rendering, `display_poem()` TUI console, save/load serialization, and the interactive Poem writing minigame.
+
+---
+
+> ⚠️ **Warning**: *Side effects of playing DDCC may include sudden urges to write 20-word poems at 3 AM, extreme emotional attachment to terminal windows, and double-checking your `characters/` folder.* 💚
