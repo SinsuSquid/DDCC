@@ -712,7 +712,7 @@ def select_choice(menu_node: ASTNode, state: Dict[str, Any]) -> Optional[ASTNode
             cond = child.content.get("condition")
             if cond:
                 try:
-                    res = bool(eval(cond, {}, state))
+                    res = bool(eval(cond, state))
                 except Exception:
                     res = False
                 if not res:
@@ -818,13 +818,12 @@ def find_node_by_line(root_node: ASTNode, filepath: str, line_num: int) -> Optio
 
 
 def is_json_serializable(val):
-    if val is None or isinstance(val, (int, float, str, bool)):
+    try:
+        import json
+        json.dumps(val)
         return True
-    if isinstance(val, list):
-        return all(is_json_serializable(x) for x in val)
-    if isinstance(val, dict):
-        return all(isinstance(k, str) and is_json_serializable(v) for k, v in val.items())
-    return False
+    except Exception:
+        return False
 
 
 def save_game(engine: 'DDCCEngine'):
@@ -1005,7 +1004,7 @@ class DDCCEngine:
                 var_name = node.content["var"]
                 expr = node.content["expr"]
                 try:
-                    val = eval(expr, {}, self.state)
+                    val = eval(expr, self.state)
                     parts = var_name.split(".")
                     obj = self.state
                     for p in parts[:-1]:
@@ -1065,7 +1064,7 @@ class DDCCEngine:
 
         if label_name not in self.label_registry:
             try:
-                eval_res = str(eval(label_name, {}, self.state))
+                eval_res = str(eval(label_name, self.state))
                 if eval_res in self.label_registry:
                     label_name = eval_res
             except Exception:
@@ -1086,7 +1085,7 @@ class DDCCEngine:
 
         if label_name not in self.label_registry:
             try:
-                eval_res = str(eval(label_name, {}, self.state))
+                eval_res = str(eval(label_name, self.state))
                 if eval_res in self.label_registry:
                     label_name = eval_res
             except Exception:
@@ -1142,7 +1141,7 @@ class DDCCEngine:
                 if match:
                     expr = match.group(1).strip()
                     try:
-                        poem_obj = eval(expr, {}, self.state)
+                        poem_obj = eval(expr, self.state)
                         if poem_obj:
                             display_poem(poem_obj, self)
                             return
@@ -1220,7 +1219,7 @@ class DDCCEngine:
         elif node.node_type == "if":
             cond = node.content["condition"]
             try:
-                res = bool(eval(cond, {}, self.state))
+                res = bool(eval(cond, self.state))
             except Exception:
                 res = False
             if res:
@@ -1234,7 +1233,7 @@ class DDCCEngine:
         elif node.node_type == "elif":
             cond = node.content["condition"]
             try:
-                res = bool(eval(cond, {}, self.state))
+                res = bool(eval(cond, self.state))
             except Exception:
                 res = False
             if res:
