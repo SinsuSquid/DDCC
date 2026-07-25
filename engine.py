@@ -15,15 +15,27 @@ from parser import RPYParser, ASTNode
 
 console = Console()
 
-# Platform-specific non-blocking key checker
-try:
-    import msvcrt  # Windows
+# Check if stdin is a real terminal (TTY)
+IS_TTY = sys.stdin.isatty()
+
+if IS_TTY:
+    try:
+        import msvcrt  # Windows
+        def kbhit():
+            return msvcrt.kbhit()
+    except ImportError:
+        import select  # Unix / Linux / macOS
+        def kbhit():
+            return select.select([sys.stdin], [], [], 0)[0] != []
+else:
     def kbhit():
-        return msvcrt.kbhit()
-except ImportError:
-    import select  # Unix / Linux / macOS
-    def kbhit():
-        return select.select([sys.stdin], [], [], 0)[0] != []
+        return False
+
+def read_key_safe() -> str:
+    if not IS_TTY:
+        time.sleep(0.01)  # Prevent CPU spinning
+        return "\n"
+    return readchar.readkey()
 
 
 # Character names and styling
@@ -199,7 +211,7 @@ def display_dialogue(char_id: str, text: str, state: Dict[str, Any], delay: floa
     char_name = get_character_name(char_id, state)
     
     display_text = ""
-    panel_title = f"[ {style_info['color']} ]{char_name}[/ ]" if char_name else None
+    panel_title = f"[{style_info['color']}]{char_name}[/]" if char_name else None
     
     text_renderable = Text(display_text, style=style_info["color"])
     panel = Panel(text_renderable, title=panel_title, border_style=style_info["border"], width=80)
@@ -214,7 +226,7 @@ def display_dialogue(char_id: str, text: str, state: Dict[str, Any], delay: floa
             
             # Fast-forward on keypress
             if kbhit():
-                readchar.readkey()
+                read_key_safe()
                 text_renderable.plain = text
                 live.refresh()
                 break
@@ -226,8 +238,8 @@ def display_dialogue(char_id: str, text: str, state: Dict[str, Any], delay: floa
         live.refresh()
         
     while True:
-        key = readchar.readkey()
-        if key in (readchar.key.SPACE, readchar.key.ENTER, "\r", "\n", " "):
+        key = read_key_safe()
+        if not IS_TTY or key in (readchar.key.SPACE, readchar.key.ENTER, "\r", "\n", " "):
             break
             
     # 3. Clean cursor and update console
@@ -290,8 +302,8 @@ def play_poem_game(state: Dict[str, Any]):
             
             with Live(panel, auto_refresh=False) as live:
                 live.refresh()
-                key = readchar.readkey()
-                if key == readchar.key.UP:
+                key = read_key_safe()
+                if IS_TTY and key == readchar.key.UP:
                     selected_idx = (selected_idx - 1) % 10
                 elif key == readchar.key.DOWN:
                     selected_idx = (selected_idx + 1) % 10
@@ -393,9 +405,11 @@ def select_choice(menu_node: ASTNode, state: Dict[str, Any]) -> Optional[ASTNode
     for p in prompts:
         if p.node_type == "dialogue":
             char_name = get_character_name(p.content["char"], state)
-            console.print(f"[bold pink1]{char_name}[/]: {p.content['text']}")
+            char_text = Text(f"{char_name}: ", style="bold pink1")
+            body_text = Text(p.content['text'])
+            console.print(char_text + body_text)
         else:
-            console.print(f"[italic]{p.content['text']}[/]")
+            console.print(Text(p.content['text'], style="italic"))
             
     if not choices:
         return None
@@ -416,8 +430,8 @@ def select_choice(menu_node: ASTNode, state: Dict[str, Any]) -> Optional[ASTNode
         panel = Panel(renderable, title="Decision", width=60)
         with Live(panel, auto_refresh=False) as live:
             live.refresh()
-            key = readchar.readkey()
-            if key == readchar.key.UP:
+            key = read_key_safe()
+            if IS_TTY and key == readchar.key.UP:
                 selected_idx = (selected_idx - 1) % len(choices)
             elif key == readchar.key.DOWN:
                 selected_idx = (selected_idx + 1) % len(choices)
@@ -584,7 +598,7 @@ class DDCCEngine:
         if t:
             time.sleep(t)
         else:
-            readchar.readkey()
+            read_key_safe()
 
     def jump(self, label_name: str):
         if label_name in self.label_registry:
