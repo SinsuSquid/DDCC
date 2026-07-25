@@ -573,7 +573,8 @@ def play_poem_game(state: Dict[str, Any]):
                         
                 # Right side: status
                 status_text = Text()
-                status_text.append(f"Progress: [bold magenta]{round_num} / 20[/bold magenta]\n\n")
+                status_text.append("Progress: ", style="bold white")
+                status_text.append(f"{round_num} / 20\n\n", style="bold magenta")
                 status_text.append("Current Scores:\n", style="bold cyan")
                 status_text.append(f" 🎀 Sayori:  {int(sPointTotal)}\n", style="bold sky_blue1")
                 status_text.append(f" 🧁 Natsuki: {int(nPointTotal)}\n", style="bold pink1")
