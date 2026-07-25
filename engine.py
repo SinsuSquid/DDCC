@@ -202,51 +202,139 @@ class RenPyMock:
         self.engine.call(label)
 
 
-def display_dialogue(char_id: str, text: str, state: Dict[str, Any], delay: float = 0.015):
+def display_dialogue(char_id: str, text: str, engine: 'DDCCEngine', delay: float = 0.015):
     """
     Displays character dialogue in a themed border box with typewriter effect.
-    Supports keypress to fast-forward.
+    Supports keypress to fast-forward, auto-play, skip, and game saving.
     """
+    state = engine.state
     style_info = CHARACTER_STYLES.get(char_id, {"name": char_id, "color": "bold white", "border": "white"})
     char_name = get_character_name(char_id, state)
+    
+    # Check if skip mode is active
+    is_skipping = state.get("skip_mode", False)
+    current_delay = 0.0 if is_skipping else delay
     
     display_text = ""
     panel_title = f"[{style_info['color']}]{char_name}[/]" if char_name else None
     
-    text_renderable = Text(display_text, style=style_info["color"])
-    panel = Panel(text_renderable, title=panel_title, border_style=style_info["border"], width=80)
+    # Bottom menu status
+    panel_subtitle = " [bold dim]Auto: [A] | Skip: [S] | Save: [G][/bold dim] "
     
-    # 1. Typewriter live loop
+    text_renderable = Text(display_text, style=style_info["color"])
+    panel = Panel(
+        text_renderable, 
+        title=panel_title, 
+        subtitle=panel_subtitle, 
+        subtitle_align="right", 
+        border_style=style_info["border"], 
+        width=80
+    )
+    
+    # Single Live context block for smooth renders and zero flicker
     with Live(panel, auto_refresh=False) as live:
-        for i, char in enumerate(text):
-            display_text += char
-            text_renderable.plain = display_text
-            live.refresh()
-            time.sleep(delay)
-            
-            # Fast-forward on keypress
-            if kbhit():
-                read_key_safe()
-                text_renderable.plain = text
-                live.refresh()
+        fast_forwarded = False
+        
+        # 1. Typewriter effect
+        for char in text:
+            if is_skipping:
                 break
                 
-    # 2. Add prompt cursor and wait for Enter/Space
-    text_renderable.plain = text + " █"
-    panel.renderable = text_renderable
-    with Live(panel, auto_refresh=False) as live:
+            if not fast_forwarded:
+                display_text += char
+                text_renderable.plain = display_text
+                live.refresh()
+                if current_delay > 0:
+                    time.sleep(current_delay)
+                
+                # Check for inputs during typing
+                if kbhit():
+                    key = read_key_safe()
+                    if key in ("a", "A"):
+                        state["auto_mode"] = not state.get("auto_mode", False)
+                        state["skip_mode"] = False
+                    elif key in ("s", "S"):
+                        state["skip_mode"] = not state.get("skip_mode", False)
+                        state["auto_mode"] = False
+                        is_skipping = state["skip_mode"]
+                    elif key in ("g", "G"):
+                        save_game(engine)
+                        panel.subtitle = " [bold green]Game Saved![/] "
+                        live.refresh()
+                        time.sleep(0.8)
+                        panel.subtitle = panel_subtitle
+                        live.refresh()
+                        
+                    display_text = text
+                    text_renderable.plain = display_text
+                    live.refresh()
+                    fast_forwarded = True
+            else:
+                break
+                
+        # Make sure full text is visible
+        text_renderable.plain = text
         live.refresh()
         
-    while True:
-        key = read_key_safe()
-        if not IS_TTY or key in (readchar.key.SPACE, readchar.key.ENTER, "\r", "\n", " "):
-            break
+        # In skip mode, add a brief delay and proceed immediately without waiting
+        if is_skipping:
+            time.sleep(0.08)
+            return
             
-    # 3. Clean cursor and update console
-    text_renderable.plain = text
-    panel.renderable = text_renderable
-    with Live(panel, auto_refresh=False) as live:
-        live.refresh()
+        # 2. Waiting or Auto-advancing
+        if IS_TTY:
+            text_renderable.plain = text + " █"
+            live.refresh()
+            
+            # Fast-forward input flush to prevent accidental skipped pages
+            if fast_forwarded:
+                time.sleep(0.15)
+                while kbhit():
+                    read_key_safe()
+                    
+            # Auto mode advance
+            if state.get("auto_mode", False):
+                wait_time = 1.0 + len(text) * 0.03
+                elapsed = 0.0
+                auto_cancelled = False
+                while elapsed < wait_time:
+                    time.sleep(0.05)
+                    elapsed += 0.05
+                    if kbhit():
+                        # Any keypress cancels auto mode
+                        read_key_safe()
+                        state["auto_mode"] = False
+                        auto_cancelled = True
+                        break
+                
+                if not auto_cancelled:
+                    text_renderable.plain = text
+                    live.refresh()
+                    return
+                    
+            # Normal keyboard waiting loop
+            while True:
+                key = read_key_safe()
+                if key in (readchar.key.SPACE, readchar.key.ENTER, "\r", "\n", " "):
+                    break
+                elif key in ("a", "A"):
+                    state["auto_mode"] = not state.get("auto_mode", False)
+                    state["skip_mode"] = False
+                    break
+                elif key in ("s", "S"):
+                    state["skip_mode"] = not state.get("skip_mode", False)
+                    state["auto_mode"] = False
+                    break
+                elif key in ("g", "G"):
+                    save_game(engine)
+                    panel.subtitle = " [bold green]Game Saved![/] "
+                    live.refresh()
+                    time.sleep(0.8)
+                    panel.subtitle = panel_subtitle
+                    live.refresh()
+                    
+            text_renderable.plain = text
+            live.refresh()
 
 
 def play_poem_game(state: Dict[str, Any]):
@@ -470,6 +558,114 @@ def load_all_scripts(game_scripts_dir: str):
     return label_registry, parsed_files
 
 
+def find_node_by_line(root_node: ASTNode, filepath: str, line_num: int) -> Optional[ASTNode]:
+    if not filepath or not line_num:
+        return None
+    # Compare basenames to tolerate absolute/relative path differences
+    if os.path.basename(root_node.filepath) != os.path.basename(filepath):
+        return None
+        
+    def search(node):
+        if node.line_num == line_num:
+            return node
+        for child in node.children:
+            res = search(child)
+            if res:
+                return res
+        return None
+        
+    return search(root_node)
+
+
+def save_game(engine: 'DDCCEngine'):
+    import json
+    save_data = {
+        "current_filepath": engine.current_node.filepath if engine.current_node else None,
+        "current_line": engine.current_node.line_num if engine.current_node else None,
+        "child_index": engine.child_index,
+        "call_stack": [
+            {
+                "filepath": frame[0].filepath if frame[0] else None,
+                "line": frame[0].line_num if frame[0] else None,
+                "child_index": frame[1],
+                "block_stack": [(b[0].line_num, b[1], b[0].filepath) for b in frame[2]]
+            } for frame in engine.call_stack
+        ],
+        "block_stack": [(b[0].line_num, b[1], b[0].filepath) for b in engine.block_stack],
+        "state_vars": {
+            k: v for k, v in engine.state.items()
+            if k not in ("renpy", "style", "audio", "delete_character", "restore_all_characters", "restore_relevant_characters", "pause", "config")
+        },
+        "persistent_vars": {
+            k: getattr(engine.state["persistent"], k)
+            for k in ("demo", "playthrough", "ghost_menu", "anticheat", "seen_eyes")
+            if hasattr(engine.state["persistent"], k)
+        }
+    }
+    save_path = "/home/bgkang/Projects/DDCC/savegame.json"
+    with open(save_path, "w", encoding="utf-8") as f:
+        json.dump(save_data, f, indent=4)
+
+
+def load_game(engine: 'DDCCEngine') -> bool:
+    import json
+    save_path = "/home/bgkang/Projects/DDCC/savegame.json"
+    if not os.path.exists(save_path):
+        return False
+        
+    try:
+        with open(save_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            
+        # Restore state variables
+        for k, v in data["state_vars"].items():
+            engine.state[k] = v
+            
+        # Restore persistent variables
+        for k, v in data["persistent_vars"].items():
+            setattr(engine.state["persistent"], k, v)
+            
+        # Helper to find node
+        def get_node(fp, line):
+            if not fp or not line:
+                return None
+            filename = os.path.basename(fp)
+            root = engine.parsed_files.get(filename)
+            if root:
+                return find_node_by_line(root, fp, line)
+            return None
+            
+        # Restore current node
+        current_filepath = data["current_filepath"]
+        current_line = data["current_line"]
+        engine.current_node = get_node(current_filepath, current_line)
+        engine.child_index = data["child_index"]
+        
+        # Restore block stack
+        engine.block_stack = []
+        for line, idx, fp in data["block_stack"]:
+            n = get_node(fp, line)
+            if n:
+                engine.block_stack.append((n, idx))
+                
+        # Restore call stack
+        engine.call_stack = []
+        for frame in data["call_stack"]:
+            fn = get_node(frame["filepath"], frame["line"])
+            b_stack = []
+            for b_line, b_idx, b_fp in frame["block_stack"]:
+                bn = get_node(b_fp, b_line)
+                if bn:
+                    b_stack.append((bn, b_idx))
+            engine.call_stack.append((fn, frame["child_index"], b_stack))
+            
+        engine.jumped = True
+        return True
+    except Exception as e:
+        console.print(f"[red]Error loading game save: {e}[/]")
+        return False
+
+
 class DDCCEngine:
     def __init__(self, game_scripts_dir: str):
         self.game_scripts_dir = game_scripts_dir
@@ -666,11 +862,11 @@ class DDCCEngine:
         if node.node_type == "dialogue":
             char = node.content["char"]
             text = interpolate_text(node.content["text"], self.state)
-            display_dialogue(char, text, self.state)
+            display_dialogue(char, text, self)
 
         elif node.node_type == "narration":
             text = interpolate_text(node.content["text"], self.state)
-            display_dialogue("narrator", text, self.state)
+            display_dialogue("narrator", text, self)
 
         elif node.node_type == "python_line":
             code = node.content["code"]
@@ -749,13 +945,26 @@ class DDCCEngine:
         # 1. Initialize
         self.init_game()
         
-        # 2. Prompt player name
+        # 2. Prompt player name or load game
         console.print("\n[bold pink1]Welcome to the Literature Club![/]")
-        player_name = console.input("[bold cyan]Enter your name (default: Protagonist): [/]").strip()
-        if not player_name:
-            player_name = "Protagonist"
-        self.state["player"] = player_name
-        console.print(f"Hello, [bold cyan]{player_name}[/]! Running game scripts...\n")
+        console.print("[bold dim]Press [Enter] to start new game, or type [L] to load the last save.[/]")
+        choice = console.input("[bold cyan]Enter name (or 'L'): [/]").strip()
+        
+        if choice.lower() == "l":
+            if load_game(self):
+                console.print("[bold green]Game loaded successfully![/]\n")
+                time.sleep(1.0)
+                self.jumped = True
+                return
+            else:
+                console.print("[bold red]No save game found or failed to load. Starting new game.[/]\n")
+                time.sleep(1.0)
+                choice = "Protagonist"
+                
+        if not choice:
+            choice = "Protagonist"
+        self.state["player"] = choice
+        console.print(f"Hello, [bold cyan]{choice}[/]! Running game scripts...\n")
         time.sleep(1.0)
 
         # 3. Execution loop

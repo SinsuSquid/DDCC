@@ -5,11 +5,12 @@ class ASTNode:
     """
     Represents a single node in the parsed Ren'Py AST.
     """
-    def __init__(self, node_type: str, line_num: int, content: Optional[Dict[str, Any]] = None, indent: int = 0):
+    def __init__(self, node_type: str, line_num: int, content: Optional[Dict[str, Any]] = None, indent: int = 0, filepath: str = ""):
         self.node_type = node_type
         self.line_num = line_num
         self.content = content or {}
         self.indent = indent
+        self.filepath = filepath
         self.children: List['ASTNode'] = []
 
     def add_child(self, child: 'ASTNode'):
@@ -195,6 +196,7 @@ class RPYParser:
 
             # Parse the line to get a new node
             node = self.parse_line(line, line_num, indent)
+            node.filepath = file_path
 
             # Handle the transition to a python block
             if node.node_type == "python_block":
