@@ -309,7 +309,7 @@ def display_dialogue(char_id: str, text: str, engine: 'DDCCEngine', delay: float
     panel_title = f"[{style_info['color']}]{char_name}[/]" if char_name else None
     
     # Bottom menu status
-    panel_subtitle = " [bold dim]Next: [Space] | Auto: [A] | Skip: [S] | Save: [G][/bold dim] "
+    panel_subtitle = " [bold dim]Next: [Space] | Auto: [A] | Skip: [S] | Save: [G] | Load: [L][/bold dim] "
     
     panel = Panel(
         safe_render_markup(display_text, style_info["color"]), 
@@ -355,6 +355,19 @@ def display_dialogue(char_id: str, text: str, engine: 'DDCCEngine', delay: float
                             time.sleep(0.8)
                             panel.subtitle = panel_subtitle
                             live.refresh()
+                        elif key in ("l", "L"):
+                            if load_game(engine):
+                                panel.subtitle = " [bold green]Game Loaded![/] "
+                                live.refresh()
+                                time.sleep(0.8)
+                                engine.jumped = True
+                                return
+                            else:
+                                panel.subtitle = " [bold red]No Save Found![/] "
+                                live.refresh()
+                                time.sleep(0.8)
+                                panel.subtitle = panel_subtitle
+                                live.refresh()
                             
                         display_text = text
                         panel.renderable = safe_render_markup(display_text, style_info["color"])
@@ -431,6 +444,19 @@ def display_dialogue(char_id: str, text: str, engine: 'DDCCEngine', delay: float
                         time.sleep(0.8)
                         panel.subtitle = panel_subtitle
                         live.refresh()
+                    elif key in ("l", "L"):
+                        if load_game(engine):
+                            panel.subtitle = " [bold green]Game Loaded![/] "
+                            live.refresh()
+                            time.sleep(0.8)
+                            engine.jumped = True
+                            return
+                        else:
+                            panel.subtitle = " [bold red]No Save Found![/] "
+                            live.refresh()
+                            time.sleep(0.8)
+                            panel.subtitle = panel_subtitle
+                            live.refresh()
                         
                 panel.renderable = safe_render_markup(text, style_info["color"])
                 live.refresh()
@@ -711,7 +737,7 @@ def save_game(engine: 'DDCCEngine'):
     save_data = {
         "current_filepath": engine.current_node.filepath if engine.current_node else None,
         "current_line": engine.current_node.line_num if engine.current_node else None,
-        "child_index": engine.child_index,
+        "child_index": max(0, engine.child_index - 1),
         "call_stack": [
             {
                 "filepath": frame[0].filepath if frame[0] else None,
