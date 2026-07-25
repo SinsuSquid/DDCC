@@ -276,10 +276,17 @@ def display_dialogue(char_id: str, text: str, engine: 'DDCCEngine', delay: float
         text_renderable.plain = text
         live.refresh()
         
-        # In skip mode, add a brief delay and proceed immediately without waiting
+        # In skip mode, check if the user pressed any key to cancel the skip
         if is_skipping:
-            time.sleep(0.08)
-            return
+            for _ in range(8):
+                time.sleep(0.01)
+                if kbhit():
+                    read_key_safe()
+                    state["skip_mode"] = False
+                    is_skipping = False
+                    break
+            if is_skipping:
+                return
             
         # 2. Waiting or Auto-advancing
         if IS_TTY:
