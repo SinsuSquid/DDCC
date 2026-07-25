@@ -15,7 +15,7 @@
 
 **Doki Doki CLI Club! (DDCC)** is an ultra-lightweight, high-performance command-line interpreter that plays *Doki Doki Literature Club* directly within your terminal. 
 
-Enjoy rich dialogue, interactive menus, character-accurate color themes, full Ren'Py text tag markup, and an in-place TUI poem writing minigame—all powered by Python, [rich](https://pypi.org/project/rich/), and [readchar](https://pypi.org/project/readchar/).
+Enjoy rich dialogue, interactive menus, character-accurate color themes, full Ren'Py text tag markup, character poem readers, and an in-place TUI poem writing minigame—all powered by Python, [rich](https://pypi.org/project/rich/), and [readchar](https://pypi.org/project/readchar/).
 
 ---
 
@@ -27,9 +27,10 @@ Enjoy rich dialogue, interactive menus, character-accurate color themes, full Re
   * 🩷 **Natsuki**: Pastel Pink (`pink1`)
   * 💚 **Monika**: Emerald Green (`green`)
   * 💜 **Yuri**: Deep Purple (`purple`)
+* 📜 **Dedicated TUI Poem Console Reader**: Renders character handwritten poems (`poem_s1`, `poem_n1`, `poem_y1`, `poem_m1`, special poems) inside styled Rich panels matching each girl's color scheme, complete with in-game hotkeys (`Space` to finish reading, `[G]` to save, `[L]` to load) and clean terminal history logs.
 * 📖 **Ren'Py Text Tag Markup**: Parses and translates `{i}` (italics), `{b}` (bold), `{u}` (underline), `{s}` (strikethrough), and `{color=...}` tags into Rich terminal styles in real-time, with automatic tag closing during typewriter animations.
 * 🎮 **Bottom Dialogue Quick-Menu**:
-  * `[Space]` : Advance to the next line of dialogue.
+  * `[Space]` : Advance to the next line of dialogue / fast-forward typewriter.
   * `[A]` : Toggle **Auto-Play** mode (automatically advances after reading delays).
   * `[S]` : Toggle **Skip Mode** (instantly fast-forwards; press any key to interrupt).
   * `[G]` : **Save Game** state to disk (`savegame.json`).
@@ -37,6 +38,7 @@ Enjoy rich dialogue, interactive menus, character-accurate color themes, full Re
 * 📝 **In-Place Split TUI Poem Minigame**: Refactored to render within a single `Live` panel block (zero terminal scroll clutter), featuring a 2-column layout displaying word choices on the left, and live progress, girl appeal scores, and recent word history on the right.
 * 🎯 **In-Place TUI Decision Menus**: Interactive choice selection with embedded prompt headers, keyboard navigation (`Up/Down`, `W/S`), and in-place frame updates.
 * 🔀 **Dynamic Ren'Py Control Flow**: Full AST parser support for `call expression` and `jump expression` statements, evaluating dynamic script variables (`poemwinner`, `nextscene`) against runtime game state.
+* 💾 **Bulletproof JSON Save System**: Trial-validated state serialization that safely filters runtime classes, functions, and modules to guarantee error-free save file generation.
 * ⚙️ **On-The-Fly RPA Unpacker & Decompiler**: Automatically extracts `.rpyc` script bytecode from official RPA archives and decompiles them into `.rpy` source scripts using `rpycdec`.
 
 ---
@@ -79,12 +81,12 @@ python engine.py
 
 | Action | Shortcut Key | Description |
 | :--- | :---: | :--- |
-| **Next Line** | `Space` | Advance dialogue / fast-forward typewriter sentence |
-| **Auto-Play** | `A` | Toggle automatic scrolling |
+| **Next Line / Finish Poem** | `Space` | Advance dialogue / finish reading poem / fast-forward typewriter |
+| **Auto-Play** | `A` | Toggle automatic line advancement |
 | **Skip Mode** | `S` | Fast-forward all dialogue; press any key to stop |
 | **Save Game** | `G` | Save current game state to `savegame.json` |
 | **Load Game** | `L` | Load last saved game state (in-game or at startup) |
-| **Menu Select** | `Enter` / `Space` | Confirm selection in Decision or Poem game |
+| **Menu Select** | `Enter` / `Space` | Confirm selection in Decision menu or Poem minigame |
 | **Navigate** | `Up` / `Down` or `W` / `S` | Move cursor in menus |
 
 ---
@@ -93,4 +95,4 @@ python engine.py
 
 * **[decompile_scripts.py](file:///home/bgkang/Projects/DDCC/decompile_scripts.py)**: Extracts `scripts.rpa`, runs `rpycdec` bytecode decompilation to `.rpy`, and cleans up output folders.
 * **[parser.py](file:///home/bgkang/Projects/DDCC/parser.py)**: Indentation-based Ren'Py syntax parser. Constructs structured AST nodes (`label`, `dialogue`, `if/elif/else`, `menu`, `call_expr`, `jump_expr`, `python_block`).
-* **[engine.py](file:///home/bgkang/Projects/DDCC/engine.py)**: Main runtime engine. Features non-blocking TTY input handling, state sandbox evaluation, Rich panel rendering, save/load serialization, and the interactive Poem writing minigame.
+* **[engine.py](file:///home/bgkang/Projects/DDCC/engine.py)**: Main runtime engine. Features non-blocking TTY input handling, state sandbox evaluation, Rich panel rendering, `display_poem()` TUI console, save/load serialization, and the interactive Poem writing minigame.
