@@ -957,26 +957,27 @@ class DDCCEngine:
         console.print("[bold dim]Press [Enter] to start new game, or type [L] to load the last save.[/]")
         choice = console.input("[bold cyan]Enter name (or 'L'): [/]").strip()
         
+        loaded = False
         if choice.lower() == "l":
             if load_game(self):
                 console.print("[bold green]Game loaded successfully![/]\n")
                 time.sleep(1.0)
-                self.jumped = True
-                return
+                loaded = True
             else:
                 console.print("[bold red]No save game found or failed to load. Starting new game.[/]\n")
                 time.sleep(1.0)
                 choice = "Protagonist"
                 
-        if not choice:
-            choice = "Protagonist"
-        self.state["player"] = choice
-        console.print(f"Hello, [bold cyan]{choice}[/]! Running game scripts...\n")
-        time.sleep(1.0)
+        if not loaded:
+            if not choice:
+                choice = "Protagonist"
+            self.state["player"] = choice
+            console.print(f"Hello, [bold cyan]{choice}[/]! Running game scripts...\n")
+            time.sleep(1.0)
+            self.jump("start")
+            self.jumped = False
 
         # 3. Execution loop
-        self.jump("start")
-        self.jumped = False
         
         while self.current_node:
             if self.jumped:
