@@ -41,8 +41,8 @@ def read_key_safe() -> str:
 # Character names and styling
 CHARACTER_STYLES = {
     "m": {"name": "Monika", "color": "bold green", "border": "green"},
-    "s": {"name": "Sayori", "color": "bold pink1", "border": "pink1"},
-    "n": {"name": "Natsuki", "color": "bold magenta", "border": "deep_pink3"},
+    "s": {"name": "Sayori", "color": "bold sky_blue1", "border": "sky_blue1"},
+    "n": {"name": "Natsuki", "color": "bold pink1", "border": "pink1"},
     "y": {"name": "Yuri", "color": "bold purple", "border": "medium_purple3"},
     "mc": {"name": "Player", "color": "bold cyan", "border": "cyan"},
     "narrator": {"name": "", "color": "italic white", "border": "grey37"},
@@ -376,7 +376,8 @@ def play_poem_game(state: Dict[str, Any]):
             
     console.print("\n[bold green]Poem complete![/]")
     console.print(f"Scores - Sayori: {sPointTotal}, Natsuki: {nPointTotal}, Yuri: {yPointTotal}")
-    console.print(f"Winner for Chapter {chapter}: [bold pink1]{winner.capitalize()}[/]\n")
+    winner_style = CHARACTER_STYLES.get(winner[0], {"color": "bold white"})["color"]
+    console.print(f"Winner for Chapter {chapter}: [{winner_style}]{winner.capitalize()}[/]\n")
     time.sleep(2.0)
 
 
@@ -405,7 +406,8 @@ def select_choice(menu_node: ASTNode, state: Dict[str, Any]) -> Optional[ASTNode
     for p in prompts:
         if p.node_type == "dialogue":
             char_name = get_character_name(p.content["char"], state)
-            char_text = Text(f"{char_name}: ", style="bold pink1")
+            char_style = CHARACTER_STYLES.get(p.content["char"], {"color": "bold white"})["color"]
+            char_text = Text(f"{char_name}: ", style=char_style)
             body_text = Text(p.content['text'])
             console.print(char_text + body_text)
         else:
