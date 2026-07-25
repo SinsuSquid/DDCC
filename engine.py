@@ -627,8 +627,8 @@ def play_poem_game(state: Dict[str, Any]):
 
 def select_choice(menu_node: ASTNode, state: Dict[str, Any]) -> Optional[ASTNode]:
     """
-    Renders an interactive choice selection for game menus.
-    Evaluates choice conditions.
+    Renders an interactive choice selection for game menus in TUI style.
+    Updates in-place without terminal scroll duplication.
     """
     prompts = []
     choices = []
@@ -647,44 +647,57 @@ def select_choice(menu_node: ASTNode, state: Dict[str, Any]) -> Optional[ASTNode
                     continue
             choices.append(child)
             
-    for p in prompts:
-        if p.node_type == "dialogue":
-            char_name = get_character_name(p.content["char"], state)
-            char_style = CHARACTER_STYLES.get(p.content["char"], {"color": "bold white"})["color"]
-            char_text = Text(f"{char_name}: ", style=char_style)
-            body_text = Text(p.content['text'])
-            console.print(char_text + body_text)
-        else:
-            console.print(Text(p.content['text'], style="italic"))
-            
     if not choices:
         return None
         
     selected_idx = 0
     running = True
-    while running:
-        renderable = Text()
-        renderable.append("Choose an option:\n\n", style="bold yellow")
-        for idx, choice in enumerate(choices):
-            text = choice.content["text"]
-            interpolated_text = interpolate_text(text, state)
-            if idx == selected_idx:
-                renderable.append(f" ->  {interpolated_text} \n", style="reverse bold cyan")
-            else:
-                renderable.append(f"     {interpolated_text} \n")
-                
-        panel = Panel(renderable, title="Decision", width=60)
+    
+    panel = Panel(Text("Initializing decision..."), title="Decision", width=70)
+    
+    set_cbreak()
+    try:
         with Live(panel, auto_refresh=False) as live:
-            live.refresh()
-            key = read_key_safe()
-            if IS_TTY and key == readchar.key.UP:
-                selected_idx = (selected_idx - 1) % len(choices)
-            elif key == readchar.key.DOWN:
-                selected_idx = (selected_idx + 1) % len(choices)
-            elif key in (readchar.key.ENTER, "\r", "\n"):
-                running = False
+            while running:
+                renderable = Text()
                 
-    console.print()
+                # Render prompt lines inside panel header if present
+                if prompts:
+                    for p in prompts:
+                        if p.node_type == "dialogue":
+                            char_name = get_character_name(p.content["char"], state)
+                            char_style = CHARACTER_STYLES.get(p.content["char"], {"color": "bold white"})["color"]
+                            renderable.append(f"{char_name}: ", style=char_style)
+                            renderable.append(f"{p.content['text']}\n", style="white")
+                        else:
+                            renderable.append(f"{p.content['text']}\n", style="italic white")
+                    renderable.append("\n")
+                    
+                renderable.append("Make a choice:\n\n", style="bold yellow")
+                for idx, choice in enumerate(choices):
+                    text = choice.content["text"]
+                    interpolated_text = interpolate_text(text, state)
+                    if idx == selected_idx:
+                        renderable.append(f" ->  {interpolated_text} \n", style="reverse bold cyan")
+                    else:
+                        renderable.append(f"     {interpolated_text} \n")
+                        
+                panel.renderable = renderable
+                panel.subtitle = " [bold dim]Select: [Space/Enter] | Navigate: [Up/Down][/bold dim] "
+                live.refresh()
+                
+                key = read_key_safe()
+                if IS_TTY and key in (readchar.key.UP, "w", "W"):
+                    selected_idx = (selected_idx - 1) % len(choices)
+                elif IS_TTY and key in (readchar.key.DOWN, "s", "S"):
+                    selected_idx = (selected_idx + 1) % len(choices)
+                elif not IS_TTY or key in (readchar.key.ENTER, readchar.key.SPACE, "\r", "\n", " "):
+                    running = False
+    finally:
+        restore_cbreak()
+        
+    chosen_text = interpolate_text(choices[selected_idx].content["text"], state)
+    console.print(f"[bold cyan]➤ Selected:[/] [bold white]{chosen_text}[/]\n")
     return choices[selected_idx]
 
 
