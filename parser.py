@@ -41,6 +41,8 @@ class RPYParser:
     def __init__(self):
         # Regex patterns for matching common Ren'Py statements
         self.label_pattern = re.compile(r"^label\s+([a-zA-Z0-9_]+)(?:\((.*)\))?\s*:")
+        self.call_expr_pattern = re.compile(r"^call\s+expression\s+(.+)")
+        self.jump_expr_pattern = re.compile(r"^jump\s+expression\s+(.+)")
         self.jump_pattern = re.compile(r"^jump\s+([a-zA-Z0-9_]+)")
         self.call_pattern = re.compile(r"^call\s+([a-zA-Z0-9_]+)(?:\((.*)\))?")
         self.define_pattern = re.compile(r"^define\s+([a-zA-Z0-9_\.]+)\s*=\s*(.+)")
@@ -74,12 +76,21 @@ class RPYParser:
         if match:
             return ASTNode("label", line_num, {"name": match.group(1), "args": match.group(2)}, indent)
 
-        # 2. Jump statement
+        # 2. Dynamic Call/Jump expressions
+        match = self.call_expr_pattern.match(stripped)
+        if match:
+            return ASTNode("call_expr", line_num, {"expr": match.group(1)}, indent)
+
+        match = self.jump_expr_pattern.match(stripped)
+        if match:
+            return ASTNode("jump_expr", line_num, {"expr": match.group(1)}, indent)
+
+        # 3. Jump statement
         match = self.jump_pattern.match(stripped)
         if match:
             return ASTNode("jump", line_num, {"label": match.group(1)}, indent)
 
-        # 3. Call statement
+        # 4. Call statement
         match = self.call_pattern.match(stripped)
         if match:
             return ASTNode("call", line_num, {"label": match.group(1), "args": match.group(2)}, indent)

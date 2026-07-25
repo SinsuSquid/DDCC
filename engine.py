@@ -868,6 +868,13 @@ class DDCCEngine:
             read_key_safe()
 
     def jump(self, label_name: str):
+        if label_name.startswith("expression "):
+            expr = label_name[11:].strip()
+            try:
+                label_name = str(eval(expr, {}, self.state))
+            except Exception:
+                pass
+
         if label_name in self.label_registry:
             self.current_node = self.label_registry[label_name]
             self.child_index = 0
@@ -878,6 +885,13 @@ class DDCCEngine:
             raise ValueError(f"Label not found: {label_name}")
 
     def call(self, label_name: str):
+        if label_name.startswith("expression "):
+            expr = label_name[11:].strip()
+            try:
+                label_name = str(eval(expr, {}, self.state))
+            except Exception:
+                pass
+
         if label_name == "poem":
             play_poem_game(self.state)
             return
@@ -909,13 +923,13 @@ class DDCCEngine:
             console.print(f"[dim yellow]🎭 Character leaves: {args}[/]")
         elif cmd == "play":
             parts = args.split(None, 1)
-            channel = parts[0]
+            channel = parts[0] if parts else "music"
             track = parts[1] if len(parts) > 1 else ""
             self.state["renpy"].music.play(track)
             console.print(f"[dim cyan]🎵 Playing {channel}: {track}[/]")
         elif cmd == "stop":
             parts = args.split(None, 1)
-            channel = parts[0]
+            channel = parts[0] if parts else "music"
             self.state["renpy"].music.stop()
             console.print(f"[dim cyan]🎵 Stopping {channel}[/]")
 
@@ -947,11 +961,13 @@ class DDCCEngine:
         elif node.node_type == "python_block":
             self.execute_python_block(node)
 
-        elif node.node_type == "jump":
-            self.jump(node.content["label"])
+        elif node.node_type in ("jump", "jump_expr"):
+            target = node.content.get("label") or node.content.get("expr")
+            self.jump(target)
 
-        elif node.node_type == "call":
-            self.call(node.content["label"])
+        elif node.node_type in ("call", "call_expr"):
+            target = node.content.get("label") or node.content.get("expr")
+            self.call(target)
 
         elif node.node_type == "return":
             if self.call_stack:
