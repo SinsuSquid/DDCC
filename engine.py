@@ -342,8 +342,6 @@ def display_dialogue(char_id: str, text: str, engine: 'DDCCEngine', delay: float
                     
             text_renderable.plain = text
             live.refresh()
-
-
 def play_poem_game(state: Dict[str, Any]):
     """
     Interactive terminal-native Poem Writing Game.
@@ -356,6 +354,8 @@ def play_poem_game(state: Dict[str, Any]):
     time.sleep(1.0)
     
     import random
+    from rich.table import Table
+    
     words = []
     poemwords_path = "/home/bgkang/Projects/DDCC/game_scripts/poemwords.txt"
     
@@ -373,36 +373,65 @@ def play_poem_game(state: Dict[str, Any]):
                     "y": float(parts[3])
                 })
                 
-    sPointTotal = 0
-    nPointTotal = 0
-    yPointTotal = 0
+    sPointTotal = 0.0
+    nPointTotal = 0.0
+    yPointTotal = 0.0
+    recent_selections = []
     
-    for round_num in range(1, 21):
-        round_words = random.sample(words, 10)
-        selected_idx = 0
-        running = True
-        
-        while running:
-            renderable = Text()
-            renderable.append(f"Choose a word [{round_num}/20]:\n\n", style="bold yellow")
+    # Initialize the panel with placeholder content
+    panel = Panel(Text("Initializing..."), title="Poem Game", width=80)
+    
+    # Single Live context block for the entire minigame to prevent scroll pollution
+    with Live(panel, auto_refresh=False) as live:
+        for round_num in range(1, 21):
+            round_words = random.sample(words, 10)
+            selected_idx = 0
+            running = True
             
-            for idx, w in enumerate(round_words):
-                word_text = w["word"]
-                if idx == selected_idx:
-                    renderable.append(f" ->  {word_text.upper()} \n", style="reverse bold pink1")
+            while running:
+                # Build the layout table
+                table = Table(box=None, show_header=False, width=72)
+                table.add_column("words", width=32)
+                table.add_column("status", width=36)
+                
+                # Left side: word selection
+                words_text = Text()
+                words_text.append(f"Choose a word:\n\n", style="bold yellow")
+                for idx, w in enumerate(round_words):
+                    word_text = w["word"]
+                    if idx == selected_idx:
+                        words_text.append(f" ->  {word_text.upper()} \n", style="reverse bold pink1")
+                    else:
+                        words_text.append(f"     {word_text} \n")
+                        
+                # Right side: status
+                status_text = Text()
+                status_text.append(f"Progress: [bold magenta]{round_num} / 20[/bold magenta]\n\n")
+                status_text.append("Current Scores:\n", style="bold cyan")
+                status_text.append(f" 🎀 Sayori:  {int(sPointTotal)}\n", style="bold sky_blue1")
+                status_text.append(f" 🧁 Natsuki: {int(nPointTotal)}\n", style="bold pink1")
+                status_text.append(f" 💜 Yuri:    {int(yPointTotal)}\n\n", style="bold purple")
+                
+                status_text.append("Recent Selections:\n", style="bold yellow")
+                if recent_selections:
+                    # Show last 3 selections
+                    for sel_word, reaction in recent_selections[-3:]:
+                        status_text.append(f" • {sel_word} ({reaction})\n", style="dim")
                 else:
-                    renderable.append(f"     {word_text} \n")
-            
-            panel = Panel(renderable, title=f"Poem Game [Round {round_num}]", width=45)
-            
-            with Live(panel, auto_refresh=False) as live:
+                    status_text.append(" None yet...\n", style="dim")
+                    
+                table.add_row(words_text, status_text)
+                
+                panel.renderable = table
+                panel.title = f"Poem Game [Round {round_num}]"
                 live.refresh()
+                
                 key = read_key_safe()
                 if IS_TTY and key == readchar.key.UP:
                     selected_idx = (selected_idx - 1) % 10
-                elif key == readchar.key.DOWN:
+                elif IS_TTY and key == readchar.key.DOWN:
                     selected_idx = (selected_idx + 1) % 10
-                elif key in (readchar.key.ENTER, "\r", "\n"):
+                elif not IS_TTY or key in (readchar.key.ENTER, "\r", "\n"):
                     chosen_word = round_words[selected_idx]
                     sPointTotal += chosen_word["s"]
                     nPointTotal += chosen_word["n"]
@@ -410,16 +439,15 @@ def play_poem_game(state: Dict[str, Any]):
                     
                     # Reaction
                     max_score = max(chosen_word["s"], chosen_word["n"], chosen_word["y"])
-                    reaction = ""
+                    reaction_short = ""
                     if chosen_word["s"] == max_score:
-                        reaction = "🎀 Sayori bounces!"
+                        reaction_short = "Sayori bounces!"
                     elif chosen_word["n"] == max_score:
-                        reaction = "🧁 Natsuki hops!"
+                        reaction_short = "Natsuki hops!"
                     else:
-                        reaction = "💜 Yuri smiles!"
+                        reaction_short = "Yuri smiles!"
                         
-                    console.print(f"Selected: [bold cyan]{chosen_word['word']}[/] | {reaction}")
-                    time.sleep(0.3)
+                    recent_selections.append((chosen_word["word"], reaction_short))
                     running = False
                     
     # End Calculations
@@ -462,15 +490,15 @@ def play_poem_game(state: Dict[str, Any]):
         
     # Thresholds
     for char_key, point_val, list_appeal in [("s", sPointTotal, "s_poemappeal"), 
-                                            ("n", nPointTotal, "n_poemappeal"), 
-                                            ("y", yPointTotal, "y_poemappeal")]:
+                                             ("n", nPointTotal, "n_poemappeal"), 
+                                             ("y", yPointTotal, "y_poemappeal")]:
         if point_val < 29:
             state[list_appeal][chapter] = -1
         elif point_val > 45:
             state[list_appeal][chapter] = 1
             
     console.print("\n[bold green]Poem complete![/]")
-    console.print(f"Scores - Sayori: {sPointTotal}, Natsuki: {nPointTotal}, Yuri: {yPointTotal}")
+    console.print(f"Scores - Sayori: {int(sPointTotal)}, Natsuki: {int(nPointTotal)}, Yuri: {int(yPointTotal)}")
     winner_style = CHARACTER_STYLES.get(winner[0], {"color": "bold white"})["color"]
     console.print(f"Winner for Chapter {chapter}: [{winner_style}]{winner.capitalize()}[/]\n")
     time.sleep(2.0)
