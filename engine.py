@@ -929,9 +929,13 @@ class DDCCEngine:
 
     def jump(self, label_name: str):
         if label_name.startswith("expression "):
-            expr = label_name[11:].strip()
+            label_name = label_name[11:].strip()
+
+        if label_name not in self.label_registry:
             try:
-                label_name = str(eval(expr, {}, self.state))
+                eval_res = str(eval(label_name, {}, self.state))
+                if eval_res in self.label_registry:
+                    label_name = eval_res
             except Exception:
                 pass
 
@@ -946,9 +950,13 @@ class DDCCEngine:
 
     def call(self, label_name: str):
         if label_name.startswith("expression "):
-            expr = label_name[11:].strip()
+            label_name = label_name[11:].strip()
+
+        if label_name not in self.label_registry:
             try:
-                label_name = str(eval(expr, {}, self.state))
+                eval_res = str(eval(label_name, {}, self.state))
+                if eval_res in self.label_registry:
+                    label_name = eval_res
             except Exception:
                 pass
 
