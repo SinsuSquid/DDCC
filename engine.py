@@ -219,7 +219,7 @@ def display_dialogue(char_id: str, text: str, engine: 'DDCCEngine', delay: float
     panel_title = f"[{style_info['color']}]{char_name}[/]" if char_name else None
     
     # Bottom menu status
-    panel_subtitle = " [bold dim]Auto: [A] | Skip: [S] | Save: [G][/bold dim] "
+    panel_subtitle = " [bold dim]Next: [Space] | Auto: [A] | Skip: [S] | Save: [G][/bold dim] "
     
     text_renderable = Text(display_text, style=style_info["color"])
     panel = Panel(
@@ -322,7 +322,7 @@ def display_dialogue(char_id: str, text: str, engine: 'DDCCEngine', delay: float
             # Normal keyboard waiting loop
             while True:
                 key = read_key_safe()
-                if key in (readchar.key.SPACE, readchar.key.ENTER, "\r", "\n", " "):
+                if key in (readchar.key.SPACE, " "):
                     break
                 elif key in ("a", "A"):
                     state["auto_mode"] = not state.get("auto_mode", False)
