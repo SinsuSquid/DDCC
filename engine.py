@@ -466,7 +466,8 @@ def display_dialogue(char_id: str, text: str, engine: 'DDCCEngine', delay: float
 
 def display_poem(poem_obj: Any, engine: 'DDCCEngine'):
     """
-    Displays a character's handwritten poem in a styled Rich panel and waits for user keypress.
+    Renders a dedicated TUI Poem Viewer console.
+    Supports in-place interactive reading, game saving, loading, and clean summary logging.
     """
     if not poem_obj:
         return
@@ -486,7 +487,7 @@ def display_poem(poem_obj: Any, engine: 'DDCCEngine'):
 
     poem_text_renderable = safe_render_markup(text, style_info["color"])
     panel_title = f"[{style_info['color']}]📜 {title} — {author_name}[/]"
-    panel_subtitle = " [bold dim]Press [Space] to finish reading poem[/bold dim] "
+    panel_subtitle = " [bold dim]Finish Reading: [Space/Enter] | Save: [G] | Load: [L][/bold dim] "
 
     panel = Panel(
         poem_text_renderable,
@@ -494,7 +495,7 @@ def display_poem(poem_obj: Any, engine: 'DDCCEngine'):
         subtitle=panel_subtitle,
         subtitle_align="right",
         border_style=style_info["border"],
-        width=74,
+        width=76,
         padding=(1, 3)
     )
 
@@ -506,8 +507,31 @@ def display_poem(poem_obj: Any, engine: 'DDCCEngine'):
                 key = read_key_safe()
                 if key in (readchar.key.SPACE, readchar.key.ENTER, " ", "\r", "\n"):
                     break
+                elif key in ("g", "G"):
+                    save_game(engine)
+                    panel.subtitle = " [bold green]Game Saved![/] "
+                    live.refresh()
+                    time.sleep(0.8)
+                    panel.subtitle = panel_subtitle
+                    live.refresh()
+                elif key in ("l", "L"):
+                    if load_game(engine):
+                        panel.subtitle = " [bold green]Game Loaded![/] "
+                        live.refresh()
+                        time.sleep(0.8)
+                        engine.jumped = True
+                        return
+                    else:
+                        panel.subtitle = " [bold red]No Save Found![/] "
+                        live.refresh()
+                        time.sleep(0.8)
+                        panel.subtitle = panel_subtitle
+                        live.refresh()
     finally:
         restore_cbreak()
+
+    # Log summary to scroll history
+    console.print(f"[bold cyan]📜 Finished reading poem:[/] [bold white]\"{title}\"[/] by [{style_info['color']}]{author_name}[/]\n")
 
 def play_poem_game(state: Dict[str, Any]):
     """
