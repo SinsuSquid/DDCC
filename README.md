@@ -55,6 +55,8 @@ Whether you're **baked** into SSH sessions or just want a **byte-sized** poem re
 
 ## 🚀 Setup & Execution (Piece of Cake! 🧁)
 
+### 0. Get original DDLC
+Download Doki Doki Literature Club! from [offical webpage](https://ddlc.moe)
 ### 1. Prerequisites
 Ensure you have Python 3.7+ installed. Install the required dependencies:
 ```bash
