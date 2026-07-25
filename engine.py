@@ -601,7 +601,7 @@ def save_game(engine: 'DDCCEngine'):
         "block_stack": [(b[0].line_num, b[1], b[0].filepath) for b in engine.block_stack],
         "state_vars": {
             k: v for k, v in engine.state.items()
-            if k not in ("renpy", "style", "audio", "delete_character", "restore_all_characters", "restore_relevant_characters", "pause", "config")
+            if k not in ("renpy", "style", "audio", "delete_character", "restore_all_characters", "restore_relevant_characters", "pause", "config", "persistent")
         },
         "persistent_vars": {
             k: getattr(engine.state["persistent"], k)
