@@ -19,6 +19,14 @@ Enjoy rich dialogue, interactive menus, character-accurate color themes, full Re
 
 ---
 
+## 📸 Memorable Moments
+
+| *"I gently open the door."* | Character File Deletion Indicator |
+| :---: | :---: |
+| ![I gently open the door](screenshot/i_gently_open_the_door.png) | ![sayori.chr deleted](screenshot/sayori.chr_deleted.png) |
+
+---
+
 ## ✨ Key Features
 
 * ⚡ **Zero-GUI Overhead**: Read the visual novel directly over SSH, in headless environments, or in your favorite terminal emulator.
@@ -59,6 +67,7 @@ DDCC/
 ├── decompile_scripts.py
 ├── engine.py
 ├── parser.py
+├── screenshot/          # Memorable moments screenshots
 └── README.md
 ```
 
