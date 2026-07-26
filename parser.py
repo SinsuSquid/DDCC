@@ -43,6 +43,7 @@ class RPYParser:
         self.label_pattern = re.compile(r"^label\s+([a-zA-Z0-9_]+)(?:\((.*)\))?\s*:")
         self.call_expr_pattern = re.compile(r"^call\s+expression\s+(.+)")
         self.jump_expr_pattern = re.compile(r"^jump\s+expression\s+(.+)")
+        self.call_screen_pattern = re.compile(r"^call\s+screen\s+([a-zA-Z0-9_]+)(?:\((.*)\))?")
         self.jump_pattern = re.compile(r"^jump\s+([a-zA-Z0-9_]+)")
         self.call_pattern = re.compile(r"^call\s+([a-zA-Z0-9_]+)(?:\((.*)\))?")
         self.define_pattern = re.compile(r"^define\s+([a-zA-Z0-9_\.]+)\s*=\s*(.+)")
@@ -84,6 +85,10 @@ class RPYParser:
         match = self.jump_expr_pattern.match(stripped)
         if match:
             return ASTNode("jump_expr", line_num, {"expr": match.group(1)}, indent)
+
+        match = self.call_screen_pattern.match(stripped)
+        if match:
+            return ASTNode("call_screen", line_num, {"screen": match.group(1), "args": match.group(2)}, indent)
 
         # 3. Jump statement
         match = self.jump_pattern.match(stripped)

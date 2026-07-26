@@ -1186,6 +1186,55 @@ class DDCCEngine:
         except Exception:
             pass
 
+    def handle_call_screen(self, screen_name: str, args_str: str):
+        """
+        Handles Ren'Py 'call screen' statements (e.g. call screen confirm(...)).
+        Displays interactive TUI prompt and sets self.state["_return"].
+        """
+        if screen_name == "confirm":
+            message = "Confirm choice?"
+            if args_str:
+                match = re.search(r'^"([^"]+)"', args_str.strip())
+                if match:
+                    message = match.group(1).replace("\\n", "\n")
+
+            choices_text = ["Yes", "No"]
+            selected_idx = 0
+            running = True
+
+            panel = Panel(Text(message, style="bold white"), title="Notification", width=70)
+            set_cbreak()
+            try:
+                with Live(panel, auto_refresh=False) as live:
+                    while running:
+                        renderable = Text()
+                        renderable.append(f"{message}\n\n", style="bold yellow")
+                        for idx, opt in enumerate(choices_text):
+                            if idx == selected_idx:
+                                renderable.append(f" ->  {opt} \n", style="reverse bold cyan")
+                            else:
+                                renderable.append(f"     {opt} \n")
+                        panel.renderable = renderable
+                        panel.subtitle = " [bold dim]Select: [Space/Enter] | Navigate: [Up/Down][/bold dim] "
+                        live.refresh()
+
+                        key = read_key_safe()
+                        if IS_TTY and key in (readchar.key.UP, "w", "W"):
+                            selected_idx = (selected_idx - 1) % 2
+                        elif IS_TTY and key in (readchar.key.DOWN, "s", "S"):
+                            selected_idx = (selected_idx + 1) % 2
+                        elif not IS_TTY or key in (readchar.key.ENTER, readchar.key.SPACE, "\r", "\n", " "):
+                            running = False
+            finally:
+                restore_cbreak()
+
+            is_yes = (selected_idx == 0)
+            self.state["_return"] = is_yes
+            chosen_label = "Yes" if is_yes else "No"
+            console.print(f"[bold cyan]➤ Choice:[/] [bold white]{chosen_label}[/]\n")
+        else:
+            self.state["_return"] = True
+
     def handle_command(self, cmd: str, args: str):
         if cmd == "scene":
             console.print(f"[dim yellow]🎬 Scene changes to: {args}[/]")
@@ -1262,6 +1311,11 @@ class DDCCEngine:
             if args_str:
                 self.bind_call_args(args_str)
             self.call(target)
+
+        elif node.node_type == "call_screen":
+            screen_name = node.content["screen"]
+            args_str = node.content.get("args", "")
+            self.handle_call_screen(screen_name, args_str)
 
         elif node.node_type == "return":
             if self.call_stack:
