@@ -1308,34 +1308,118 @@ class DDCCEngine:
             self.current_node = node
             self.child_index = 0
 
+    def show_main_menu(self) -> str:
+        """
+        Renders an interactive TUI Main Menu at game startup.
+        Returns chosen action: 'new_game', 'load_game', or 'exit'.
+        """
+        options = [
+            ("New Game", "new_game"),
+            ("Load Game", "load_game"),
+            ("Reset Save Data", "reset_save"),
+            ("Controls / Help", "help"),
+            ("Exit", "exit")
+        ]
+        selected_idx = 0
+        running = True
+        chosen_action = "new_game"
+
+        panel = Panel(Text("Initializing Main Menu..."), title="🎀 Doki Doki Literature Club! 🎀", width=74)
+
+        set_cbreak()
+        try:
+            with Live(panel, auto_refresh=False) as live:
+                while running:
+                    renderable = Text()
+                    renderable.append("Welcome to the Literature Club!\n\n", style="bold pink1")
+                    
+                    for idx, (label, action) in enumerate(options):
+                        if idx == selected_idx:
+                            renderable.append(f" ->  {label} \n", style="reverse bold cyan")
+                        else:
+                            renderable.append(f"     {label} \n")
+
+                    panel.renderable = renderable
+                    panel.subtitle = " [bold dim]Select: [Space/Enter] | Navigate: [Up/Down][/bold dim] "
+                    live.refresh()
+
+                    key = read_key_safe()
+                    if IS_TTY and key in (readchar.key.UP, "w", "W"):
+                        selected_idx = (selected_idx - 1) % len(options)
+                    elif IS_TTY and key in (readchar.key.DOWN, "s", "S"):
+                        selected_idx = (selected_idx + 1) % len(options)
+                    elif not IS_TTY or key in (readchar.key.ENTER, readchar.key.SPACE, "\r", "\n", " "):
+                        chosen_action = options[selected_idx][1]
+                        
+                        if chosen_action == "help":
+                            help_text = Text()
+                            help_text.append("🎮 Controls & Hotkeys:\n\n", style="bold yellow")
+                            help_text.append(" • [Space] : Advance dialogue / Fast-forward typewriter\n")
+                            help_text.append(" • [A]     : Toggle Auto-Play mode\n")
+                            help_text.append(" • [S]     : Toggle Skip mode\n")
+                            help_text.append(" • [G]     : Save game state\n")
+                            help_text.append(" • [L]     : Load game state\n\n")
+                            help_text.append("Press any key to return...", style="dim white")
+                            panel.renderable = help_text
+                            panel.subtitle = ""
+                            live.refresh()
+                            read_key_safe()
+                        elif chosen_action == "reset_save":
+                            reset_text = Text()
+                            reset_text.append("⚠️ Reset All Save Data?\n\n", style="bold red")
+                            reset_text.append("This will delete savegame.json and persistent.json data!\n\n")
+                            reset_text.append("Press [Y] to confirm, or any other key to cancel.", style="yellow")
+                            panel.renderable = reset_text
+                            live.refresh()
+                            confirm_key = read_key_safe()
+                            if confirm_key in ("y", "Y"):
+                                for f_path in ("/home/bgkang/Projects/DDCC/savegame.json", PERSISTENT_PATH):
+                                    if os.path.exists(f_path):
+                                        try: os.remove(f_path)
+                                        except: pass
+                                reset_text = Text("\n[bold green]Save data deleted successfully![/]\n", style="bold green")
+                                panel.renderable = reset_text
+                                live.refresh()
+                                time.sleep(1.0)
+                        else:
+                            running = False
+        finally:
+            restore_cbreak()
+
+        return chosen_action
+
     def run(self):
         # 1. Initialize
         self.init_game()
         
-        # 2. Prompt player name or load game
-        console.print("\n[bold pink1]Welcome to the Literature Club![/]")
-        console.print("[bold dim]Press [Enter] to start new game, or type [L] to load the last save.[/]")
-        choice = console.input("[bold cyan]Enter name (or 'L'): [/]").strip()
-        
-        loaded = False
-        if choice.lower() == "l":
-            if load_game(self):
-                console.print("[bold green]Game loaded successfully![/]\n")
+        # 2. Main Menu Loop
+        while True:
+            action = self.show_main_menu()
+
+            if action == "exit":
+                console.print("\n[bold pink1]Goodbye! Thanks for visiting the Literature Club! 🎀[/]\n")
+                return
+
+            elif action == "load_game":
+                if load_game(self):
+                    console.print("[bold green]Game loaded successfully![/]\n")
+                    time.sleep(1.0)
+                    break
+                else:
+                    console.print("[bold red]No save game found. Please start a New Game.[/]\n")
+                    time.sleep(1.2)
+
+            elif action == "new_game":
+                console.print()
+                name_input = console.input("[bold cyan]Enter player name (default 'MC'): [/]").strip()
+                if not name_input:
+                    name_input = "MC"
+                self.state["player"] = name_input
+                console.print(f"Hello, [bold cyan]{name_input}[/]! Running game scripts...\n")
                 time.sleep(1.0)
-                loaded = True
-            else:
-                console.print("[bold red]No save game found or failed to load. Starting new game.[/]\n")
-                time.sleep(1.0)
-                choice = "MC"
-                
-        if not loaded:
-            if not choice:
-                choice = "MC"
-            self.state["player"] = choice
-            console.print(f"Hello, [bold cyan]{choice}[/]! Running game scripts...\n")
-            time.sleep(1.0)
-            self.jump("start")
-            self.jumped = False
+                self.jump("start")
+                self.jumped = False
+                break
 
         # 3. Execution loop
         
