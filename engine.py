@@ -1096,15 +1096,33 @@ class DDCCEngine:
         run_define(root_node)
 
     def delete_character(self, name: str):
+        import os
+        chr_path = f"/home/bgkang/Projects/DDCC/DDLC-1.1.1-pc/characters/{name}.chr"
+        if os.path.exists(chr_path):
+            try:
+                os.remove(chr_path)
+            except Exception:
+                pass
         console.print(f"\n[bold red]System: Character file '{name}.chr' deleted.[/]\n")
-        time.sleep(1.0)
 
-    def restore_all_characters(self):
-        console.print("\n[bold green]System: All character files restored.[/]\n")
-        time.sleep(1.0)
+    def restore_all_characters(self, verbose: bool = False):
+        import os
+        chars = ["sayori.chr", "monika.chr", "natsuki.chr", "yuri.chr"]
+        char_dir = "/home/bgkang/Projects/DDCC/DDLC-1.1.1-pc/characters"
+        os.makedirs(char_dir, exist_ok=True)
+        for c in chars:
+            c_path = os.path.join(char_dir, c)
+            if not os.path.exists(c_path):
+                try:
+                    with open(c_path, "w", encoding="utf-8") as f:
+                        f.write(f"Character file data for {c}\n")
+                except Exception:
+                    pass
+        if verbose:
+            console.print("\n[bold green]System: All character files restored.[/]\n")
 
     def restore_relevant_characters(self):
-        self.restore_all_characters()
+        self.restore_all_characters(verbose=False)
 
     def pause(self, t: Optional[float] = None):
         if t:
