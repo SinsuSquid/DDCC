@@ -1433,7 +1433,7 @@ class DDCCEngine:
                         elif chosen_action == "reset_save":
                             reset_text = Text()
                             reset_text.append("⚠️ Reset All Save Data?\n\n", style="bold red")
-                            reset_text.append("This will delete savegame.json and persistent.json data!\n\n")
+                            reset_text.append("This will delete savegame.json, persistent.json, and restore all character files!\n\n")
                             reset_text.append("Press [Y] to confirm, or any other key to cancel.", style="yellow")
                             panel.renderable = reset_text
                             live.refresh()
@@ -1443,7 +1443,9 @@ class DDCCEngine:
                                     if os.path.exists(f_path):
                                         try: os.remove(f_path)
                                         except: pass
-                                reset_text = Text("\n[bold green]Save data deleted successfully![/]\n", style="bold green")
+                                restore_all_characters()
+                                self.init_game()
+                                reset_text = Text("\n[bold green]Save data reset to Act 1 successfully![/]\n", style="bold green")
                                 panel.renderable = reset_text
                                 live.refresh()
                                 time.sleep(1.0)
@@ -1483,6 +1485,7 @@ class DDCCEngine:
                         name_input = console.input("[bold cyan]Enter player name (default 'MC'): [/]").strip()
                         if not name_input:
                             name_input = "MC"
+                        self.init_game()
                         self.state["player"] = name_input
                         console.print(f"Hello, [bold cyan]{name_input}[/]! Running game scripts...\n")
                         time.sleep(1.0)
