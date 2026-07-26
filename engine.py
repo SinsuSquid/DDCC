@@ -1392,56 +1392,63 @@ class DDCCEngine:
         # 1. Initialize
         self.init_game()
         
-        # 2. Main Menu Loop
+        # Outer game loop (returns to Main Menu upon completion)
         while True:
-            action = self.show_main_menu()
+            # 2. Main Menu Loop
+            while True:
+                action = self.show_main_menu()
 
-            if action == "exit":
-                console.print("\n[bold pink1]Goodbye! Thanks for visiting the Literature Club! 🎀[/]\n")
-                return
+                if action == "exit":
+                    console.print("\n[bold pink1]Goodbye! Thanks for visiting the Literature Club! 🎀[/]\n")
+                    return
 
-            elif action == "load_game":
-                if load_game(self):
-                    console.print("[bold green]Game loaded successfully![/]\n")
+                elif action == "load_game":
+                    if load_game(self):
+                        console.print("[bold green]Game loaded successfully![/]\n")
+                        time.sleep(1.0)
+                        break
+                    else:
+                        console.print("[bold red]No save game found. Please start a New Game.[/]\n")
+                        time.sleep(1.2)
+
+                elif action == "new_game":
+                    console.print()
+                    name_input = console.input("[bold cyan]Enter player name (default 'MC'): [/]").strip()
+                    if not name_input:
+                        name_input = "MC"
+                    self.state["player"] = name_input
+                    console.print(f"Hello, [bold cyan]{name_input}[/]! Running game scripts...\n")
                     time.sleep(1.0)
-                    break
-                else:
-                    console.print("[bold red]No save game found. Please start a New Game.[/]\n")
-                    time.sleep(1.2)
-
-            elif action == "new_game":
-                console.print()
-                name_input = console.input("[bold cyan]Enter player name (default 'MC'): [/]").strip()
-                if not name_input:
-                    name_input = "MC"
-                self.state["player"] = name_input
-                console.print(f"Hello, [bold cyan]{name_input}[/]! Running game scripts...\n")
-                time.sleep(1.0)
-                self.jump("start")
-                self.jumped = False
-                break
-
-        # 3. Execution loop
-        
-        while self.current_node:
-            if self.jumped:
-                self.jumped = False
-                continue
-
-            if self.child_index >= len(self.current_node.children):
-                if self.block_stack:
-                    self.current_node, self.child_index = self.block_stack.pop()
-                    continue
-                elif self.call_stack:
-                    self.current_node, self.child_index, self.block_stack = self.call_stack.pop()
-                    continue
-                else:
-                    console.print("\n[bold green]Thanks for playing Doki Doki CLI Club! 🎀[/]\n")
+                    self.jump("start")
+                    self.jumped = False
                     break
 
-            node = self.current_node.children[self.child_index]
-            self.child_index += 1
-            self.execute_node(node)
+            # 3. Execution loop
+            while self.current_node:
+                if self.jumped:
+                    self.jumped = False
+                    continue
+
+                if self.child_index >= len(self.current_node.children):
+                    if self.block_stack:
+                        self.current_node, self.child_index = self.block_stack.pop()
+                        continue
+                    elif self.call_stack:
+                        self.current_node, self.child_index, self.block_stack = self.call_stack.pop()
+                        continue
+                    else:
+                        self.current_node = None
+                        break
+
+                node = self.current_node.children[self.child_index]
+                self.child_index += 1
+                self.execute_node(node)
+
+            # 4. Save persistent data and return to Main Menu
+            if "persistent" in self.state:
+                save_persistent_data(self.state["persistent"])
+            console.print("\n[bold yellow]Returning to Main Menu...[/]\n")
+            time.sleep(1.2)
 
 
 if __name__ == "__main__":
