@@ -337,10 +337,11 @@ def display_dialogue(char_id: str, text: str, engine: 'DDCCEngine', delay: float
     style_info = CHARACTER_STYLES.get(char_id, {"name": char_id, "color": "bold white", "border": "white"})
     char_name = get_character_name(char_id, state)
     
-    has_nw = "{nw}" in text
+    in_yuri_kill = bool(state.get("in_yuri_kill", False))
+    has_nw = "{nw}" in text or in_yuri_kill
     
     # Check if skip mode is active
-    is_skipping = state.get("skip_mode", False)
+    is_skipping = state.get("skip_mode", False) or in_yuri_kill
     current_delay = 0.0 if is_skipping else delay
     
     display_text = ""
