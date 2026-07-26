@@ -1080,6 +1080,8 @@ class DDCCEngine:
         console.print("[yellow]Loading scripts and indexing labels...[/]")
         self.label_registry, self.parsed_files = load_all_scripts(self.game_scripts_dir)
         
+        import random
+        specials = random.sample(range(1, 12), 3)
         persistent = StateObject({
             "demo": False,
             "playthrough": 0,
@@ -1087,8 +1089,11 @@ class DDCCEngine:
             "anticheat": 12345,
             "seen_eyes": None,
             "steam": False,
+            "special_poems": specials,
         })
         load_persistent_data(persistent)
+        if not hasattr(persistent, "special_poems") or not persistent.special_poems or persistent.special_poems == [0, 0, 0]:
+            persistent.special_poems = specials
         config = ConfigMock()
         
         self.state = {
@@ -1253,6 +1258,8 @@ class DDCCEngine:
                 eval_res = str(eval(label_name, self.state))
                 if eval_res in self.label_registry:
                     label_name = eval_res
+                elif eval_res.startswith("poem_special_"):
+                    label_name = "poem_special_1"
             except Exception:
                 pass
 
