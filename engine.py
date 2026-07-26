@@ -616,7 +616,7 @@ def play_poem_game(state: Dict[str, Any]):
                 table.add_row(words_text, status_text)
                 
                 panel.renderable = table
-                panel.title = f"Poem Game [Round {round_num}]"
+                panel.title = "Poem Game"
                 live.refresh()
                 
                 key = read_key_safe()
