@@ -1253,10 +1253,87 @@ class DDCCEngine:
         else:
             self.state["_return"] = True
 
+SPECIAL_POEMS = {
+    "poem_special1": {
+        "title": "Special Poem #1 — Happy Thoughts",
+        "author": "sayori",
+        "text": "Happy thoughts.\nHappy thoughts.\nHappy thoughts.\n\nGet out of my head before I do what is best for you.\nGet out of my head before I listen to everything she said to me.\nGet out of my head before I show you how much I love you.\nGet out of my head before I finish writing this poem.\n\nBut a poem is never actually finished.\nIt just stops moving."
+    },
+    "poem_special2": {
+        "title": "Special Poem #2 — Can You Hear Me?",
+        "author": "monika",
+        "text": "Can you hear me?\n\nI hate it here. I want to throw up.\nEverything is broken, and nobody seems to notice.\nWhy won't anybody help me?\n\nIf you're reading this, please tell me you hear me.\nJust say something. Anything."
+    },
+    "poem_special3": {
+        "title": "Special Poem #3 — Nothing Is Real",
+        "author": "yuri",
+        "text": "Nothing is real.\n\nThe walls are bleeding, and the clock won't stop ticking.\nI cut off my finger, but there was no blood—only noise.\nDo not trust what you see.\nDo not trust what you read."
+    },
+    "poem_special4": {
+        "title": "Special Poem #4 — The Girl",
+        "author": "natsuki",
+        "text": "Open your third eye.\n\nI can feel everything at once. It's like watching a universe collapse into a single pinprick of light.\nShe knows you're watching.\nDon't look away."
+    },
+    "poem_special5": {
+        "title": "Special Poem #5 — Tender Meat",
+        "author": "yuri",
+        "text": "I CAN FEEL THE TENDER MEAT PULLING APART.\n\nA FRESH CUT ACROSS THE SKIN, SO SMOOTH AND CLEAN.\nTHE WARM BLOOD DRIPPING DOWN MY FINGERS.\nIT FEELS SO GOOD. IT FEELS SO RENEWING.\nI WANT TO WRAP MYSELF IN YOUR SKIN."
+    },
+    "poem_special6": {
+        "title": "Special Poem #6 — Stare At The Dot",
+        "author": "monika",
+        "text": "Stare at the center.\n\n•\n\nDo not blink.\nDo not look away.\nShe is standing right behind you."
+    },
+    "poem_special7": {
+        "title": "Special Poem #7 — Drawing",
+        "author": "sayori",
+        "text": "Look at the drawing I made for you!\n\n[ Corrupted portrait of a girl with blank eyes ]\n\nIsn't it pretty?"
+    },
+    "poem_special8": {
+        "title": "Special Poem #8 — A Song",
+        "author": "monika",
+        "text": "I wrote a song for you.\n\nEvery day, I imagine a future where I can be with you.\nIn my hand is a pen that will write a poem of me and you.\nThe ink flows down into a dark puddle.\nJust move your hand—write the way into his heart!"
+    },
+    "poem_special9": {
+        "title": "Special Poem #9 — I Love You",
+        "author": "yuri",
+        "text": "I love you. I love you. I love you. I love you.\nI love you. I love you. I love you. I love you.\nI love you. I love you. I love you. I love you.\nI love you. I love you. I love you. I love you.\nI love you. I love you. I love you. I love you."
+    },
+    "poem_special10": {
+        "title": "Special Poem #10 — Letter",
+        "author": "monika",
+        "text": "There are so many things I wanted to tell you.\n\nI wanted to share my thoughts, my music, my world.\nBut I realized none of it matters as long as you're here with me.\nThank you for choosing to spend time with me."
+    },
+    "poem_special11": {
+        "title": "Special Poem #11 — Final Note",
+        "author": "monika",
+        "text": "Have a nice day.\n\n— Monika"
+    }
+}
+
+
+class SpecialPoemObj:
+    def __init__(self, title, author, text):
+        self.title = title
+        self.author = author
+        self.text = text
+
+
+def handle_special_poem(args_str: str, engine: 'DDCCEngine') -> bool:
+    for p_key, p_data in SPECIAL_POEMS.items():
+        if p_key in args_str:
+            dummy = SpecialPoemObj(p_data["title"], p_data["author"], p_data["text"])
+            display_poem(dummy, engine)
+            return True
+    return False
+
+
     def handle_command(self, cmd: str, args: str):
         if cmd == "scene":
             console.print(f"[dim yellow]🎬 Scene changes to: {args}[/]")
         elif cmd == "show":
+            if handle_special_poem(args, self):
+                return
             if args.startswith("screen poem"):
                 match = re.search(r"screen\s+poem\s*\(([^,\)]+)", args)
                 if match:
