@@ -247,6 +247,37 @@ class RandomMock:
         return random.random()
 
 
+PERSISTENT_PATH = "/home/bgkang/Projects/DDCC/persistent.json"
+
+
+def save_persistent_data(persistent_obj):
+    import json
+    data = {}
+    for k in ("demo", "playthrough", "ghost_menu", "anticheat", "seen_eyes", "clearall", "first_poem", "first_run", "oldversion", "deleted_saves"):
+        if hasattr(persistent_obj, k):
+            val = getattr(persistent_obj, k)
+            if is_json_serializable(val):
+                data[k] = val
+    try:
+        with open(PERSISTENT_PATH, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4)
+    except Exception:
+        pass
+
+
+def load_persistent_data(persistent_obj):
+    import json
+    if not os.path.exists(PERSISTENT_PATH):
+        return
+    try:
+        with open(PERSISTENT_PATH, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        for k, v in data.items():
+            setattr(persistent_obj, k, v)
+    except Exception:
+        pass
+
+
 class RenPyMock:
     """
     Emulates the Ren'Py engine API namespace for Python execution inside scripts.
@@ -258,6 +289,10 @@ class RenPyMock:
         self.random = RandomMock()
         self.android = False
         self.ios = False
+
+    def save_persistent(self, *args, **kwargs):
+        if "persistent" in self.engine.state:
+            save_persistent_data(self.engine.state["persistent"])
 
     def list_saved_games(self, *args, **kwargs):
         return []
@@ -301,6 +336,8 @@ def display_dialogue(char_id: str, text: str, engine: 'DDCCEngine', delay: float
     state = engine.state
     style_info = CHARACTER_STYLES.get(char_id, {"name": char_id, "color": "bold white", "border": "white"})
     char_name = get_character_name(char_id, state)
+    
+    has_nw = "{nw}" in text
     
     # Check if skip mode is active
     is_skipping = state.get("skip_mode", False)
@@ -381,6 +418,10 @@ def display_dialogue(char_id: str, text: str, engine: 'DDCCEngine', delay: float
             # Make sure full text is visible
             panel.renderable = safe_render_markup(text, style_info["color"])
             live.refresh()
+            
+            # If line has {nw} (no-wait), advance immediately for Act 2 scare cuts
+            if has_nw:
+                return
             
             # In skip mode, check if the user pressed any key to cancel the skip
             if is_skipping:
@@ -942,6 +983,7 @@ class DDCCEngine:
             "seen_eyes": None,
             "steam": False,
         })
+        load_persistent_data(persistent)
         config = ConfigMock()
         
         self.state = {
