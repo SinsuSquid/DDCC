@@ -74,7 +74,7 @@ CHARACTER_STYLES = {
     "s": {"name": "Sayori", "color": "bold sky_blue1", "border": "sky_blue1"},
     "n": {"name": "Natsuki", "color": "bold pink1", "border": "pink1"},
     "y": {"name": "Yuri", "color": "bold purple", "border": "medium_purple3"},
-    "mc": {"name": "Player", "color": "bold cyan", "border": "cyan"},
+    "mc": {"name": "MC", "color": "bold cyan", "border": "cyan"},
     "narrator": {"name": "", "color": "italic white", "border": "grey37"},
 }
 
@@ -145,7 +145,7 @@ def get_character_name(char_id: str, state: Dict[str, Any]) -> str:
     Returns the current name of the character based on the state variable.
     """
     if char_id == "mc":
-        return state.get("player", "Player")
+        return state.get("player", "MC")
     elif char_id == "s":
         return state.get("s_name", "Sayori")
     elif char_id == "m":
@@ -989,7 +989,7 @@ class DDCCEngine:
         self.state = {
             "persistent": persistent,
             "config": config,
-            "player": "Player",
+            "player": "MC",
             "s_name": "Sayori",
             "m_name": "Monika",
             "n_name": "Natsuki",
@@ -1326,11 +1326,11 @@ class DDCCEngine:
             else:
                 console.print("[bold red]No save game found or failed to load. Starting new game.[/]\n")
                 time.sleep(1.0)
-                choice = "Protagonist"
+                choice = "MC"
                 
         if not loaded:
             if not choice:
-                choice = "Protagonist"
+                choice = "MC"
             self.state["player"] = choice
             console.print(f"Hello, [bold cyan]{choice}[/]! Running game scripts...\n")
             time.sleep(1.0)
