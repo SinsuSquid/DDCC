@@ -742,7 +742,10 @@ def play_poem_game(state: Dict[str, Any]):
             state[list_appeal][chapter] = 1
             
     console.print("\n[bold green]Poem complete![/]")
-    console.print(f"Scores - Sayori: {int(sPointTotal)}, Natsuki: {int(nPointTotal)}, Yuri: {int(yPointTotal)}")
+    if sayori_active:
+        console.print(f"Scores - Sayori: {int(sPointTotal)}, Natsuki: {int(nPointTotal)}, Yuri: {int(yPointTotal)}")
+    else:
+        console.print(f"Scores - Natsuki: {int(nPointTotal)}, Yuri: {int(yPointTotal)}")
     winner_style = CHARACTER_STYLES.get(winner[0], {"color": "bold white"})["color"]
     console.print(f"Winner for Chapter {chapter}: [{winner_style}]{winner.capitalize()}[/]\n")
     time.sleep(2.0)
