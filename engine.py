@@ -1518,6 +1518,20 @@ class DDCCEngine:
                         continue
 
                     if self.child_index >= len(self.current_node.children):
+                        # Ren'Py label fall-through check: transition to next sequential label in file if present
+                        if self.current_node.node_type == "label" and getattr(self.current_node, "filepath", None):
+                            filepath = getattr(self.current_node, "filepath")
+                            filename = os.path.basename(filepath)
+                            root = self.parsed_files.get(filename)
+                            if root and self.current_node in root.children:
+                                idx = root.children.index(self.current_node)
+                                if idx + 1 < len(root.children):
+                                    next_sibling = root.children[idx + 1]
+                                    if next_sibling.node_type == "label":
+                                        self.current_node = next_sibling
+                                        self.child_index = 0
+                                        continue
+
                         if self.block_stack:
                             self.current_node, self.child_index = self.block_stack.pop()
                             continue
