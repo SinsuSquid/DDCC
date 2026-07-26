@@ -611,6 +611,11 @@ def play_poem_game(state: Dict[str, Any]):
     yPointTotal = 0.0
     recent_selections = []
     
+    # Check if Sayori is active
+    persistent_pt = getattr(engine.state.get("persistent"), "playthrough", 0)
+    sayori_chr_path = "/home/bgkang/Projects/DDCC/DDLC-1.1.1-pc/characters/sayori.chr"
+    sayori_active = (persistent_pt == 0) and os.path.exists(sayori_chr_path)
+    
     # Initialize the panel with placeholder content
     panel = Panel(Text("Initializing..."), title="Poem Game", width=80)
     
@@ -642,7 +647,8 @@ def play_poem_game(state: Dict[str, Any]):
                 status_text.append("Progress: ", style="bold white")
                 status_text.append(f"{round_num} / 20\n\n", style="bold magenta")
                 status_text.append("Current Scores:\n", style="bold cyan")
-                status_text.append(f" 🎀 Sayori:  {int(sPointTotal)}\n", style="bold sky_blue1")
+                if sayori_active:
+                    status_text.append(f" 🎀 Sayori:  {int(sPointTotal)}\n", style="bold sky_blue1")
                 status_text.append(f" 🧁 Natsuki: {int(nPointTotal)}\n", style="bold pink1")
                 status_text.append(f" 💜 Yuri:    {int(yPointTotal)}\n\n", style="bold purple")
                 
@@ -672,9 +678,13 @@ def play_poem_game(state: Dict[str, Any]):
                     yPointTotal += chosen_word["y"]
                     
                     # Reaction
-                    max_score = max(chosen_word["s"], chosen_word["n"], chosen_word["y"])
+                    if sayori_active:
+                        max_score = max(chosen_word["s"], chosen_word["n"], chosen_word["y"])
+                    else:
+                        max_score = max(chosen_word["n"], chosen_word["y"])
+                        
                     reaction_short = ""
-                    if chosen_word["s"] == max_score:
+                    if sayori_active and chosen_word["s"] == max_score:
                         reaction_short = "Sayori bounces!"
                     elif chosen_word["n"] == max_score:
                         reaction_short = "Natsuki hops!"
