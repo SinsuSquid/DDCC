@@ -914,22 +914,26 @@ def load_game(engine: 'DDCCEngine') -> bool:
     if not os.path.exists(save_path):
         return False
         
-    # Trauma check: If in Act 2/Act 3 (playthrough >= 1) or sayori.chr is missing/deleted
-    persistent_pt = getattr(engine.state.get("persistent"), "playthrough", 0)
-    sayori_chr_path = "/home/bgkang/Projects/DDCC/DDLC-1.1.1-pc/characters/sayori.chr"
-    sayori_deleted = not os.path.exists(sayori_chr_path)
-    
-    if persistent_pt >= 1 or sayori_deleted:
-        console.print("\n[bold red]Error: Save file corrupt or 'sayori.chr' is missing or corrupted.[/bold red]")
-        console.print("[bold red]System: Cannot load save state from previous timeline.[/bold red]")
-        console.print("[bold green]Monika: \"Ahaha... looks like that save file doesn't exist anymore! Let me start a new game for you~\"[/bold green]\n")
-        time.sleep(2.0)
-        return False
-
     try:
         with open(save_path, "r", encoding="utf-8") as f:
             data = json.load(f)
             
+        # Check the playthrough level stored in the save file
+        saved_pt = data.get("persistent_vars", {}).get("playthrough", 0)
+
+        # Current timeline status
+        current_pt = getattr(engine.state.get("persistent"), "playthrough", 0)
+        sayori_chr_path = "/home/bgkang/Projects/DDCC/DDLC-1.1.1-pc/characters/sayori.chr"
+        sayori_deleted = not os.path.exists(sayori_chr_path)
+
+        # Trauma check: Block loading Act 1 saves (saved_pt == 0) when in Act 2/3 or when sayori.chr is deleted
+        if saved_pt == 0 and (current_pt >= 1 or sayori_deleted):
+            console.print("\n[bold red]Error: Save file corrupt or 'sayori.chr' is missing or corrupted.[/bold red]")
+            console.print("[bold red]System: Cannot load save state from previous timeline.[/bold red]")
+            console.print("[bold green]Monika: \"Ahaha... looks like that save file doesn't exist anymore! Let me start a new game for you~\"[/bold green]\n")
+            time.sleep(2.0)
+            return False
+
         # Restore state variables
         for k, v in data["state_vars"].items():
             engine.state[k] = v
