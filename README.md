@@ -1,9 +1,10 @@
 # 🎀 Doki Doki CLI Club! (DDCC)
 
 ![](https://img.shields.io/badge/Python-3.7%2B-blue)
-![](https://img.shields.io/badge/CLI-Critical_Loss_of_Integrity-pink)
+![](https://img.shields.io/badge/CLI-Critical_Loss_of_Integrity-red)
 ![](https://img.shields.io/badge/Just-Monika-green)
 ![](https://img.shields.io/badge/Sayo-Nara-skyblue)
+![](https://img.shields.io/badge/Manga_IS-Literature-pink)
 
 > *"Welcome to the Literature Club! Write your way into her heart... directly inside your favorite terminal interface."* 💚
 
@@ -16,7 +17,7 @@
 
 **Doki Doki CLI Club! (DDCC)** is an ultra-lightweight, high-performance command-line visual novel engine that **cuts** through GUI overhead and lets you **hang** out with the Literature Club in pure ASCII glory.
 
-Whether you're **baked** into SSH sessions or just want a **byte-sized** poem reading experience, DDCC brings the full psychological horror and wholesome clubroom vibes directly to your shell—with **no strings attached!** 🧵
+Whether you're in SSH sessions or just want a byte-sized poem reading experience, DDCC brings the full psychological horror and wholesome clubroom vibes directly to your shell.
 
 ---
 
