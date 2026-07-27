@@ -11,7 +11,7 @@ from rich.text import Text
 from rich.live import Live
 
 # Ensure local imports work
-sys.path.insert(0, "/home/bgkang/Projects/DDCC")
+sys.path.insert(0, os.getcwd())
 from parser import RPYParser, ASTNode
 
 console = Console()
