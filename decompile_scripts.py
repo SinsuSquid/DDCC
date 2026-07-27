@@ -4,8 +4,8 @@ import pickle
 import subprocess
 import glob
 
-rpa_path = "${pwd}/DDLC-1.1.1-pc/game/scripts.rpa"
-output_dir = "${pwd}/game_scripts"
+rpa_path = os.path.join(os.getcwd(), "DDLC-1.1.1-pc", "game", "scripts.rpa")
+output_dir = os.path.join(os.getcwd(), "game-scripts")
 
 os.makedirs(output_dir, exist_ok=True)
 
