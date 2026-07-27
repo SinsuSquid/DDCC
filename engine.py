@@ -591,7 +591,7 @@ def play_poem_game(state: Dict[str, Any]):
     from rich.table import Table
     
     words = []
-    poemwords_path = so.path.join(os.getcwd(), "game_scripts", "poemwords.txt")
+    poemwords_path = os.path.join(os.getcwd(), "game_scripts", "poemwords.txt")
     
     with open(poemwords_path, "r", encoding="utf-8") as f:
         for line in f:
