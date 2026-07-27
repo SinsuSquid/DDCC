@@ -5,7 +5,7 @@ import subprocess
 import glob
 
 rpa_path = os.path.join(os.getcwd(), "DDLC-1.1.1-pc", "game", "scripts.rpa")
-output_dir = os.path.join(os.getcwd(), "game-scripts")
+output_dir = os.path.join(os.getcwd(), "game_scripts")
 
 os.makedirs(output_dir, exist_ok=True)
 
