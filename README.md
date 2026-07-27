@@ -24,7 +24,7 @@ Whether you're **baked** into SSH sessions or just want a **byte-sized** poem re
 
 > *"I gently open the door..."* (Spoiler: Don't **hang** around too long!) 💔
 
-| *"I gently open the door."* | *Sayo-nara* |
+| *"I gently open the door."* | *No more visual PTSD!* |
 | :---: | :---: |
 | ![I gently open the door](screenshot/i_gently_open_the_door.png) | ![sayori.chr deleted](screenshot/sayori.chr_deleted.png) |
 
