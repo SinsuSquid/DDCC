@@ -1,9 +1,9 @@
 # 🎀 Doki Doki CLI Club! (DDCC)
 
-![](https://img.shields.io/badge/💚_Just-Monika-green)
 ![](https://img.shields.io/badge/Python-3.7%2B-blue)
-![](https://img.shields.io/badge/CLI-Terminal_Visual_Novel-pink)
-![](https://img.shields.io/badge/Puns-100%25_Freshly_Baked-yellow)
+![](https://img.shields.io/badge/CLI-Critical_Loss_of_Integrity-pink)
+![](https://img.shields.io/badge/Just-Monika-green)
+![](https://img.shields.io/badge/Sayo-Nara-skyblue)
 
 > *"Welcome to the Literature Club! Write your way into her heart... directly inside your favorite terminal interface."* 💚
 
