@@ -218,7 +218,7 @@ class ConfigMock(StateObject):
     def __init__(self):
         super().__init__()
         self.keymap = KeymapMock()
-        self.basedir = "/home/bgkang/Projects/DDCC/DDLC-1.1.1-pc"
+        self.basedir = os.path.join(os.getcwd(), "DDLC-1.1.1-pc")
         self.allow_skipping = True
         self.developer = False
 
@@ -247,7 +247,7 @@ class RandomMock:
         return random.random()
 
 
-PERSISTENT_PATH = "/home/bgkang/Projects/DDCC/persistent.json"
+PERSISTENT_PATH = os.path.join(os.getcwd(), "persistent.json")
 
 
 def save_persistent_data(persistent_obj):
@@ -309,13 +309,13 @@ class RenPyMock:
     def file(self, path: str):
         # Normalize and locate characters
         import os
-        base_dir = "/home/bgkang/Projects/DDCC/DDLC-1.1.1-pc/characters"
+        base_dir = os.path.join(os.getcwd(), "DDLC-1.1.1-pc", "characters")
         chr_name = os.path.basename(path)
         chr_path = os.path.join(base_dir, chr_name)
         
         # Check if file exists in characters or fallback to game_scripts
         if not os.path.exists(chr_path):
-            alt_path = os.path.join("/home/bgkang/Projects/DDCC/game_scripts", chr_name)
+            alt_path = os.path.join((os.getcwd(), "game_scripts", chr_name)
             if os.path.exists(alt_path):
                 return open(alt_path, "r", encoding="utf-8")
             raise FileNotFoundError(f"Mock RenPy file not found: {path}")
@@ -591,7 +591,7 @@ def play_poem_game(state: Dict[str, Any]):
     from rich.table import Table
     
     words = []
-    poemwords_path = "/home/bgkang/Projects/DDCC/game_scripts/poemwords.txt"
+    poemwords_path = so.path.join(os.getcwd(), "game_scripts", "poemwords.txt")
     
     with open(poemwords_path, "r", encoding="utf-8") as f:
         for line in f:
@@ -614,7 +614,7 @@ def play_poem_game(state: Dict[str, Any]):
     
     # Check if Sayori is active
     persistent_pt = getattr(engine.state.get("persistent"), "playthrough", 0)
-    sayori_chr_path = "/home/bgkang/Projects/DDCC/DDLC-1.1.1-pc/characters/sayori.chr"
+    sayori_chr_path = os.path.join(os.getcwd(), "DDLC-1.1.1-pc", "characters", "sayori.chr")
     sayori_active = (persistent_pt == 0) and os.path.exists(sayori_chr_path)
     
     # Initialize the panel with placeholder content
@@ -907,14 +907,14 @@ def save_game(engine: 'DDCCEngine'):
             if hasattr(engine.state["persistent"], k)
         }
     }
-    save_path = "/home/bgkang/Projects/DDCC/savegame.json"
+    save_path = os.path.join(os.getcwd(), "savegame.json")
     with open(save_path, "w", encoding="utf-8") as f:
         json.dump(save_data, f, indent=4)
 
 
 def load_game(engine: 'DDCCEngine') -> bool:
     import json
-    save_path = "/home/bgkang/Projects/DDCC/savegame.json"
+    save_path = save_path = os.path.join(os.getcwd(), "savegame.json")
     if not os.path.exists(save_path):
         return False
         
@@ -927,7 +927,7 @@ def load_game(engine: 'DDCCEngine') -> bool:
 
         # Current timeline status
         current_pt = getattr(engine.state.get("persistent"), "playthrough", 0)
-        sayori_chr_path = "/home/bgkang/Projects/DDCC/DDLC-1.1.1-pc/characters/sayori.chr"
+        sayori_chr_path =save_path = os.path.join(os.getcwd(), "DDLC-1.1.1-pc", "characters", "sayori.chr")
         sayori_deleted = not os.path.exists(sayori_chr_path)
 
         # Trauma check: Block loading Act 1 saves (saved_pt == 0) when in Act 2/3 or when sayori.chr is deleted
@@ -1195,7 +1195,7 @@ class DDCCEngine:
 
     def delete_character(self, name: str):
         import os
-        chr_path = f"/home/bgkang/Projects/DDCC/DDLC-1.1.1-pc/characters/{name}.chr"
+        chr_path = os.path.join(os.getcwd(), "DDLC-1.1.1-pc", "characters", f"{name}.chr")
         if os.path.exists(chr_path):
             try:
                 os.remove(chr_path)
@@ -1206,7 +1206,8 @@ class DDCCEngine:
     def restore_all_characters(self, verbose: bool = False):
         import os
         chars = ["sayori.chr", "monika.chr", "natsuki.chr", "yuri.chr"]
-        char_dir = "/home/bgkang/Projects/DDCC/DDLC-1.1.1-pc/characters"
+        char_dir =  os.path.join(os.getcwd(), "DDLC-1.1.1-pc", "characters")
+        if os.path.exists(chr_path):
         os.makedirs(char_dir, exist_ok=True)
         for c in chars:
             c_path = os.path.join(char_dir, c)
@@ -1559,7 +1560,7 @@ class DDCCEngine:
                             live.refresh()
                             confirm_key = read_key_safe()
                             if confirm_key in ("y", "Y"):
-                                for f_path in ("/home/bgkang/Projects/DDCC/savegame.json", PERSISTENT_PATH):
+                                for f_path in (os.path.join(os.getcwd(), "savegame.json"), PERSISTENT_PATH):
                                     if os.path.exists(f_path):
                                         try: os.remove(f_path)
                                         except: pass
@@ -1660,7 +1661,7 @@ class DDCCEngine:
 
 if __name__ == "__main__":
     try:
-        engine = DDCCEngine("/home/bgkang/Projects/DDCC/game_scripts")
+        engine = DDCCEngine(os.path.join(os.getcwd() , "game_scripts")
         engine.run()
     except KeyboardInterrupt:
         restore_cbreak()
