@@ -315,7 +315,7 @@ class RenPyMock:
         
         # Check if file exists in characters or fallback to game_scripts
         if not os.path.exists(chr_path):
-            alt_path = os.path.join((os.getcwd(), "game_scripts", chr_name)
+            alt_path = os.path.join(os.getcwd(), "game_scripts", chr_name)
             if os.path.exists(alt_path):
                 return open(alt_path, "r", encoding="utf-8")
             raise FileNotFoundError(f"Mock RenPy file not found: {path}")
@@ -1208,7 +1208,7 @@ class DDCCEngine:
         chars = ["sayori.chr", "monika.chr", "natsuki.chr", "yuri.chr"]
         char_dir =  os.path.join(os.getcwd(), "DDLC-1.1.1-pc", "characters")
         if os.path.exists(chr_path):
-        os.makedirs(char_dir, exist_ok=True)
+            os.makedirs(char_dir, exist_ok=True)
         for c in chars:
             c_path = os.path.join(char_dir, c)
             if not os.path.exists(c_path):
@@ -1661,7 +1661,7 @@ class DDCCEngine:
 
 if __name__ == "__main__":
     try:
-        engine = DDCCEngine(os.path.join(os.getcwd() , "game_scripts")
+        engine = DDCCEngine(os.path.join(os.getcwd() , "game_scripts"))
         engine.run()
     except KeyboardInterrupt:
         restore_cbreak()
