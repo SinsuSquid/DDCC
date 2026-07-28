@@ -1420,7 +1420,7 @@ class DDCCEngine:
     def jump(self, label_name: str):
         resolved = self.resolve_label_name(label_name)
 
-        if resolved in ("ch30_main", "ch40_main", "splashscreen"):
+        if resolved in ("ch30_main", "ch40_main", "splashscreen", "yuri_kill_3"):
             self.state["in_yuri_kill"] = False
             self.state["skip_mode"] = False
             self.state["auto_mode"] = False
@@ -1437,7 +1437,7 @@ class DDCCEngine:
     def call(self, label_name: str):
         resolved = self.resolve_label_name(label_name)
 
-        if resolved in ("ch30_main", "ch40_main", "splashscreen"):
+        if resolved in ("ch30_main", "ch40_main", "splashscreen", "yuri_kill_3"):
             self.state["in_yuri_kill"] = False
             self.state["skip_mode"] = False
             self.state["auto_mode"] = False
