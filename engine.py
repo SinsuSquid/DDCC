@@ -937,9 +937,9 @@ def select_choice(menu_node: ASTNode, state: Dict[str, Any]) -> Optional[ASTNode
                             char_name = get_character_name(p.content["char"], state)
                             char_style = CHARACTER_STYLES.get(p.content["char"], {"color": "bold white"})["color"]
                             renderable.append(f"{char_name}: ", style=char_style)
-                            renderable.append(f"{p.content['text']}\n", style="white")
+                            renderable.append(f"{interpolate_text(p.content['text'], state)}\n", style="white")
                         else:
-                            renderable.append(f"{p.content['text']}\n", style="italic white")
+                            renderable.append(f"{interpolate_text(p.content['text'], state)}\n", style="italic white")
                     renderable.append("\n")
                     
                 renderable.append("Make a choice:\n\n", style="bold yellow")
