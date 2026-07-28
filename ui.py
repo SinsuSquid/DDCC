@@ -17,6 +17,7 @@ from state import (
     interpolate_text,
     safe_render_markup,
     save_persistent_data,
+    has_chr_file,
 )
 
 console = Console()
