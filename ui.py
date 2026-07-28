@@ -196,6 +196,18 @@ def display_dialogue(char_id: str, text: str, engine: Any, delay: float = 0.015)
                         
                 # Normal keyboard waiting loop
                 while True:
+                    persistent_pt = getattr(state.get("persistent"), "playthrough", 0)
+                    if persistent_pt == 3 and not getattr(state.get("persistent"), "monika_kill", False):
+                        if not has_chr_file("monika.chr"):
+                            state["persistent"].monika_kill = True
+                            engine.jump("ch30_end")
+                            engine.jumped = True
+                            return
+
+                    if not kbhit():
+                        time.sleep(0.05)
+                        continue
+
                     key = read_key_safe()
                     if key in (readchar.key.SPACE, " "):
                         break

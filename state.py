@@ -210,30 +210,31 @@ CHARACTERS_DIR = os.path.join(os.getcwd(), "characters")
 
 
 def ensure_characters_dir():
-    os.makedirs(CHARACTERS_DIR, exist_ok=True)
-    for char_name in ("monika.chr", "sayori.chr", "natsuki.chr", "yuri.chr"):
-        target = os.path.join(CHARACTERS_DIR, char_name)
-        if not os.path.exists(target):
-            src1 = os.path.join(os.getcwd(), "DDLC-1.1.1-pc", "characters", char_name)
-            src2 = os.path.join(os.getcwd(), "game_scripts", char_name)
-            if os.path.exists(src1):
-                try:
-                    with open(src1, "rb") as sf, open(target, "wb") as tf:
-                        tf.write(sf.read())
-                except Exception:
-                    pass
-            elif os.path.exists(src2):
-                try:
-                    with open(src2, "rb") as sf, open(target, "wb") as tf:
-                        tf.write(sf.read())
-                except Exception:
-                    pass
-            else:
-                try:
-                    with open(target, "w", encoding="utf-8") as tf:
-                        tf.write(f"Character file for {char_name}")
-                except Exception:
-                    pass
+    if not os.path.exists(CHARACTERS_DIR):
+        os.makedirs(CHARACTERS_DIR, exist_ok=True)
+        for char_name in ("monika.chr", "sayori.chr", "natsuki.chr", "yuri.chr"):
+            target = os.path.join(CHARACTERS_DIR, char_name)
+            if not os.path.exists(target):
+                src1 = os.path.join(os.getcwd(), "DDLC-1.1.1-pc", "characters", char_name)
+                src2 = os.path.join(os.getcwd(), "game_scripts", char_name)
+                if os.path.exists(src1):
+                    try:
+                        with open(src1, "rb") as sf, open(target, "wb") as tf:
+                            tf.write(sf.read())
+                    except Exception:
+                        pass
+                elif os.path.exists(src2):
+                    try:
+                        with open(src2, "rb") as sf, open(target, "wb") as tf:
+                            tf.write(sf.read())
+                    except Exception:
+                        pass
+                else:
+                    try:
+                        with open(target, "w", encoding="utf-8") as tf:
+                            tf.write(f"Character file for {char_name}")
+                    except Exception:
+                        pass
 
 
 def has_chr_file(chr_name: str) -> bool:
