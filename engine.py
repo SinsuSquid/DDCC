@@ -386,6 +386,9 @@ class RenPyMock:
             time.sleep(delay)
 
     def full_restart(self, *args, **kwargs):
+        self.engine.state["in_yuri_kill"] = False
+        self.engine.state["skip_mode"] = False
+        self.engine.state["auto_mode"] = False
         self.engine.current_node = None
         self.engine.child_index = 0
 
@@ -1407,6 +1410,11 @@ class DDCCEngine:
     def jump(self, label_name: str):
         resolved = self.resolve_label_name(label_name)
 
+        if resolved in ("ch30_main", "ch40_main", "splashscreen"):
+            self.state["in_yuri_kill"] = False
+            self.state["skip_mode"] = False
+            self.state["auto_mode"] = False
+
         if resolved in self.label_registry:
             self.current_node = self.label_registry[resolved]
             self.child_index = 0
@@ -1418,6 +1426,11 @@ class DDCCEngine:
 
     def call(self, label_name: str):
         resolved = self.resolve_label_name(label_name)
+
+        if resolved in ("ch30_main", "ch40_main", "splashscreen"):
+            self.state["in_yuri_kill"] = False
+            self.state["skip_mode"] = False
+            self.state["auto_mode"] = False
 
         if resolved == "poem":
             play_poem_game(self.state)
