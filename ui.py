@@ -36,7 +36,13 @@ def display_dialogue(char_id: str, text: str, engine: Any, delay: float = 0.015)
     has_nw = "{nw}" in text
     
     # Check if skip mode is active
-    is_skipping = bool(state.get("skip_mode", False))
+    config_obj = state.get("config")
+    allow_skipping = getattr(config_obj, "allow_skipping", True) if config_obj else True
+    if not allow_skipping:
+        state["skip_mode"] = False
+        is_skipping = False
+    else:
+        is_skipping = bool(state.get("skip_mode", False))
     current_delay = 0.0 if is_skipping else delay
     
     display_text = ""
@@ -79,9 +85,28 @@ def display_dialogue(char_id: str, text: str, engine: Any, delay: float = 0.015)
                             state["auto_mode"] = not state.get("auto_mode", False)
                             state["skip_mode"] = False
                         elif key in ("s", "S"):
-                            state["skip_mode"] = not state.get("skip_mode", False)
-                            state["auto_mode"] = False
-                            is_skipping = state["skip_mode"]
+                            config_obj = state.get("config")
+                            allow_skipping = getattr(config_obj, "allow_skipping", True) if config_obj else True
+                            persistent_pt = getattr(state.get("persistent"), "playthrough", 0)
+                            
+                            if not allow_skipping:
+                                state["skip_mode"] = False
+                                is_skipping = False
+                                if persistent_pt == 3:
+                                    state["persistent"].tried_skip = True
+                                    engine.jump("ch30_noskip")
+                                    engine.jumped = True
+                                    return
+                                else:
+                                    panel.subtitle = " [bold red]Skipping Disabled![/] "
+                                    live.refresh()
+                                    time.sleep(0.8)
+                                    panel.subtitle = panel_subtitle
+                                    live.refresh()
+                            else:
+                                state["skip_mode"] = not state.get("skip_mode", False)
+                                state["auto_mode"] = False
+                                is_skipping = state["skip_mode"]
                         elif key in ("g", "G"):
                             save_game(engine)
                             panel.subtitle = " [bold green]Game Saved![/] "

@@ -101,16 +101,23 @@ class RenPyMock:
         return 0
 
     def file(self, path: str):
-        base_dir = os.path.join(os.getcwd(), "DDLC-1.1.1-pc", "characters")
         chr_name = os.path.basename(path)
-        chr_path = os.path.join(base_dir, chr_name)
+        chr_dir = os.path.join(os.getcwd(), "characters")
+        chr_path = os.path.join(chr_dir, chr_name)
         
-        if not os.path.exists(chr_path):
-            alt_path = os.path.join(os.getcwd(), "game_scripts", chr_name)
-            if os.path.exists(alt_path):
-                return open(alt_path, "r", encoding="utf-8")
-            raise FileNotFoundError(f"Mock RenPy file not found: {path}")
-        return open(chr_path, "r", encoding="utf-8")
+        if os.path.exists(chr_path):
+            return open(chr_path, "r", encoding="utf-8", errors="ignore")
+        
+        # Fallbacks
+        alt1 = os.path.join(os.getcwd(), "DDLC-1.1.1-pc", "characters", chr_name)
+        if os.path.exists(alt1):
+            return open(alt1, "r", encoding="utf-8", errors="ignore")
+            
+        alt2 = os.path.join(os.getcwd(), "game_scripts", chr_name)
+        if os.path.exists(alt2):
+            return open(alt2, "r", encoding="utf-8", errors="ignore")
+            
+        raise FileNotFoundError(f"Mock RenPy file not found: {path}")
 
     def jump(self, label: str):
         self.engine.jump(label)

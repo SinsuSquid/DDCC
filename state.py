@@ -206,10 +206,50 @@ def eval_condition(cond: str, state: Dict[str, Any]) -> bool:
         return False
 
 
+CHARACTERS_DIR = os.path.join(os.getcwd(), "characters")
+
+
+def ensure_characters_dir():
+    os.makedirs(CHARACTERS_DIR, exist_ok=True)
+    for char_name in ("monika.chr", "sayori.chr", "natsuki.chr", "yuri.chr"):
+        target = os.path.join(CHARACTERS_DIR, char_name)
+        if not os.path.exists(target):
+            src1 = os.path.join(os.getcwd(), "DDLC-1.1.1-pc", "characters", char_name)
+            src2 = os.path.join(os.getcwd(), "game_scripts", char_name)
+            if os.path.exists(src1):
+                try:
+                    with open(src1, "rb") as sf, open(target, "wb") as tf:
+                        tf.write(sf.read())
+                except Exception:
+                    pass
+            elif os.path.exists(src2):
+                try:
+                    with open(src2, "rb") as sf, open(target, "wb") as tf:
+                        tf.write(sf.read())
+                except Exception:
+                    pass
+            else:
+                try:
+                    with open(target, "w", encoding="utf-8") as tf:
+                        tf.write(f"Character file for {char_name}")
+                except Exception:
+                    pass
+
+
 def has_chr_file(chr_name: str) -> bool:
-    path1 = os.path.join(os.getcwd(), "DDLC-1.1.1-pc", "characters", chr_name)
-    path2 = os.path.join(os.getcwd(), "game_scripts", chr_name)
-    return os.path.exists(path1) or os.path.exists(path2)
+    ensure_characters_dir()
+    path = os.path.join(CHARACTERS_DIR, chr_name)
+    return os.path.exists(path)
+
+
+def delete_chr_file(chr_name: str):
+    ensure_characters_dir()
+    path = os.path.join(CHARACTERS_DIR, chr_name if chr_name.endswith(".chr") else chr_name + ".chr")
+    if os.path.exists(path):
+        try:
+            os.remove(path)
+        except Exception:
+            pass
 
 
 def is_json_serializable(val):
