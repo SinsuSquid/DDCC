@@ -85,8 +85,12 @@ except Exception:
 
 def read_key_safe() -> str:
     if not IS_TTY:
-        time.sleep(0.01)  # Prevent CPU spinning
-        return "\n"
+        try:
+            line = sys.stdin.readline()
+            return line if line else "\n"
+        except Exception:
+            time.sleep(1.0)
+            return "\n"
     try:
         key = readchar.readkey()
         if key == readchar.key.CTRL_C or key == "\x03":
@@ -617,6 +621,12 @@ def display_dialogue(char_id: str, text: str, engine: 'DDCCEngine', delay: float
                         
                 panel.renderable = safe_render_markup(text, style_info["color"])
                 live.refresh()
+            else:
+                # In non-TTY environment, wait for user input
+                try:
+                    sys.stdin.readline()
+                except Exception:
+                    time.sleep(1.5)
     finally:
         restore_cbreak()
 
