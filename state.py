@@ -277,7 +277,7 @@ def save_persistent_data(persistent_obj):
 
 def load_persistent_data(persistent_obj):
     if not os.path.exists(PERSISTENT_PATH):
-        return
+        return persistent_obj
     try:
         with open(PERSISTENT_PATH, "r", encoding="utf-8") as f:
             data = json.load(f)
@@ -285,3 +285,4 @@ def load_persistent_data(persistent_obj):
             setattr(persistent_obj, k, v)
     except Exception:
         pass
+    return persistent_obj

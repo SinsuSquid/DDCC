@@ -204,6 +204,9 @@ def display_dialogue(char_id: str, text: str, engine: Any, delay: float = 0.015)
                             engine.jumped = True
                             return
 
+                    if not IS_TTY:
+                        break
+
                     if not kbhit():
                         time.sleep(0.05)
                         continue
