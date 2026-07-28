@@ -220,14 +220,22 @@ class RPYParser:
                 python_block_node = node
                 python_block_indent = indent
 
-            # Ensure labels are always attached as top-level children under root
+            # Ensure top-level labels (indent == 0) reset the stack, while indented labels attach to current parent
             if node.node_type == "label":
-                root.add_child(node)
-                stack = [(-1, root), (indent, node)]
-                continue
+                if indent == 0:
+                    root.add_child(node)
+                    stack = [(-1, root), (0, node)]
+                    continue
+                else:
+                    while len(stack) > 1 and stack[-1][0] >= indent:
+                        stack.pop()
+                    parent = stack[-1][1] if stack else root
+                    parent.add_child(node)
+                    stack.append((indent, node))
+                    continue
 
-            # Find the correct parent based on indentation stack, preserving active label as base parent
-            while len(stack) > 2 and stack[-1][0] >= indent:
+            # Find the correct parent based on indentation stack
+            while len(stack) > 1 and stack[-1][0] >= indent:
                 stack.pop()
 
             if not stack:
