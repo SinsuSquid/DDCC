@@ -393,8 +393,16 @@ class RenPyMock:
         self.engine.state["in_yuri_kill"] = False
         self.engine.state["skip_mode"] = False
         self.engine.state["auto_mode"] = False
-        self.engine.current_node = None
-        self.engine.child_index = 0
+        self.engine.call_stack.clear()
+        self.engine.block_stack.clear()
+
+        autoload = getattr(self.engine.state.get("persistent"), "autoload", None)
+        if autoload and autoload in self.engine.label_registry:
+            self.engine.jump(autoload)
+        elif "splashscreen" in self.engine.label_registry:
+            self.engine.jump("splashscreen")
+        else:
+            self.engine.jump("start")
 
     def show(self, *args, **kwargs):
         pass
