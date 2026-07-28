@@ -244,6 +244,12 @@ class KeymapMock(dict):
         return super().__getitem__(item)
 
 
+def has_chr_file(chr_name: str) -> bool:
+    path1 = os.path.join(os.getcwd(), "DDLC-1.1.1-pc", "characters", chr_name)
+    path2 = os.path.join(os.getcwd(), "game_scripts", chr_name)
+    return os.path.exists(path1) or os.path.exists(path2)
+
+
 class ConfigMock(StateObject):
     def __init__(self):
         super().__init__()
@@ -676,8 +682,7 @@ def play_poem_game(state: Dict[str, Any]):
         return
 
     # Check if Sayori is active
-    sayori_chr_path = os.path.join(os.getcwd(), "DDLC-1.1.1-pc", "characters", "sayori.chr")
-    sayori_active = (persistent_pt == 0) and os.path.exists(sayori_chr_path)
+    sayori_active = (persistent_pt == 0) and has_chr_file("sayori.chr")
     
     # Initialize the panel with placeholder content
     panel = Panel(Text("Initializing..."), title="Poem Game", width=80)
@@ -989,8 +994,7 @@ def load_game(engine: 'DDCCEngine') -> bool:
 
         # Current timeline status
         current_pt = getattr(engine.state.get("persistent"), "playthrough", 0)
-        sayori_chr_path =save_path = os.path.join(os.getcwd(), "DDLC-1.1.1-pc", "characters", "sayori.chr")
-        sayori_deleted = not os.path.exists(sayori_chr_path)
+        sayori_deleted = not has_chr_file("sayori.chr")
 
         # Trauma check: Block loading Act 1 saves (saved_pt == 0) when in Act 2/3 or when sayori.chr is deleted
         if saved_pt == 0 and (current_pt >= 1 or sayori_deleted):
@@ -1257,12 +1261,16 @@ class DDCCEngine:
 
     def delete_character(self, name: str):
         import os
-        chr_path = os.path.join(os.getcwd(), "DDLC-1.1.1-pc", "characters", f"{name}.chr")
-        if os.path.exists(chr_path):
-            try:
-                os.remove(chr_path)
-            except Exception:
-                pass
+        paths = [
+            os.path.join(os.getcwd(), "DDLC-1.1.1-pc", "characters", f"{name}.chr"),
+            os.path.join(os.getcwd(), "game_scripts", f"{name}.chr")
+        ]
+        for p in paths:
+            if os.path.exists(p):
+                try:
+                    os.remove(p)
+                except Exception:
+                    pass
         console.print(f"\n[bold red]System: Character file '{name}.chr' deleted.[/]\n")
 
     def restore_all_characters(self, verbose: bool = False):
