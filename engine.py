@@ -524,6 +524,15 @@ class DDCCEngine:
             console.print(f"[dim cyan]🎵 Stopping {channel}[/]")
 
     def execute_node(self, node: ASTNode):
+        persistent_pt = getattr(self.state.get("persistent"), "playthrough", 0)
+        if persistent_pt == 3 and not getattr(self.state.get("persistent"), "monika_kill", False):
+            if not has_chr_file("monika.chr"):
+                cur_label = self.current_node.content.get("name") if self.current_node else ""
+                if cur_label not in ("ch30_end", "ch30_clear", "ch40_main"):
+                    self.state["persistent"].monika_kill = True
+                    self.jump("ch30_end")
+                    return
+
         if node.node_type in ("elif", "else") and self.if_chain_satisfied:
             return
             
