@@ -54,6 +54,16 @@ class RenPyMock:
         self.engine.call_stack.clear()
         self.engine.block_stack.clear()
 
+        playthrough = getattr(self.engine.state.get("persistent"), "playthrough", 0)
+        if playthrough == 3:
+            self.engine.state["persistent"].autoload = "ch30_main"
+            self.engine.jump("ch30_main")
+            return
+        elif playthrough == 4:
+            self.engine.state["persistent"].autoload = "ch40_main"
+            self.engine.jump("ch40_main")
+            return
+
         autoload = getattr(self.engine.state.get("persistent"), "autoload", None)
         if autoload and autoload in self.engine.label_registry:
             self.engine.jump(autoload)
