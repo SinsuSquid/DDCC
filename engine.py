@@ -360,6 +360,46 @@ class RenPyMock:
         self.random = RandomMock()
         self.android = False
         self.ios = False
+        self.windows = True
+        self.mac = False
+        self.linux = True
+
+    def display_menu(self, items, interact=True, screen='choice'):
+        if not interact:
+            return None
+        valid_choices = [item for item in items if len(item) >= 2 and item[1]]
+        if not valid_choices:
+            return None
+        console.print()
+        for idx, (label, cond) in enumerate(valid_choices, 1):
+            console.print(f"  [bold cyan][{idx}][/] {label}")
+        console.print()
+        while True:
+            sel = console.input("[bold pink1]Choose an option: [/]").strip()
+            if sel.isdigit():
+                val = int(sel)
+                if 1 <= val <= len(valid_choices):
+                    return valid_choices[val - 1][0]
+
+    def pause(self, delay=0):
+        if delay and delay > 0:
+            time.sleep(delay)
+
+    def full_restart(self, *args, **kwargs):
+        self.engine.current_node = None
+        self.engine.child_index = 0
+
+    def show(self, *args, **kwargs):
+        pass
+
+    def hide(self, *args, **kwargs):
+        pass
+
+    def scene(self, *args, **kwargs):
+        pass
+
+    def redraw(self, *args, **kwargs):
+        pass
 
     def save_persistent(self, *args, **kwargs):
         if "persistent" in self.engine.state:
@@ -1234,6 +1274,11 @@ class DDCCEngine:
         self.state["restore_all_characters"] = self.restore_all_characters
         self.state["restore_relevant_characters"] = self.restore_relevant_characters
         self.state["pause"] = self.pause
+        def fallback_glitchtext(length=20):
+            import random
+            chars = "¡¢£¤¥¦§¨©ª«¬®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿĀāĂăĄąĆćĈĉĊċČčĎďĐđĒēĔĕĖėĘęĚěĜĝĞğĠġĢģĤĥĦħĨĩĪīĬĭĮįİıĲĳĴĵĶķĸĹĺĻļĽľĿŀŁłŃńŅņŇňŉŊŋŌōŎŏŐőŒœŔŕŖŗŘřŚśŜŝŞşŠšŢţŤťŦŧŨũŪūŬŭŮůŰűŲųŴŵŶŷŸŹźŻżŽž"
+            return "".join(random.choice(chars) for _ in range(length))
+        self.state["glitchtext"] = fallback_glitchtext
 
         # Execute defines and init python blocks across all parsed files
         for filename, root_node in self.parsed_files.items():
@@ -1241,13 +1286,9 @@ class DDCCEngine:
             self.execute_init_python_blocks(root_node)
 
     def execute_init_python_blocks(self, root_node: ASTNode):
-        def run_init(node):
-            if node.node_type == "python_block":
-                self.execute_python_block(node)
-            for child in node.children:
-                run_init(child)
-
-        run_init(root_node)
+        for child in root_node.children:
+            if child.node_type == "python_block":
+                self.execute_python_block(child)
 
     def execute_defines(self, root_node: ASTNode):
         def run_define(node):
@@ -1385,7 +1426,7 @@ class DDCCEngine:
         raw_code = "".join(node.content.get("lines", []))
         code = textwrap.dedent(raw_code)
         try:
-            exec(code, {}, self.state)
+            exec(code, self.state, self.state)
         except Exception:
             pass
 
@@ -1518,7 +1559,7 @@ class DDCCEngine:
         elif node.node_type == "python_line":
             code = node.content["code"]
             try:
-                exec(code, {}, self.state)
+                exec(code, self.state, self.state)
             except Exception:
                 pass
 
@@ -1712,14 +1753,13 @@ class DDCCEngine:
                         import getpass
                         self.init_game()
                         persistent_pt = getattr(self.state.get("persistent"), "playthrough", 0)
-                        if persistent_pt >= 2:
+                        if persistent_pt >= 3:
                             name_input = getpass.getuser()
                         else:
                             name_input = console.input("[bold cyan]Enter player name (default 'MC'): [/]").strip()
                             if not name_input:
                                 name_input = "MC"
                         self.state["player"] = name_input
-                        console.print(f"Hello, [bold cyan]{name_input}[/]! Running game scripts...\n")
                         time.sleep(1.0)
                         self.jump("start")
                         self.jumped = False
