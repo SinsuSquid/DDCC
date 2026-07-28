@@ -226,8 +226,8 @@ class RPYParser:
                 stack = [(-1, root), (indent, node)]
                 continue
 
-            # Find the correct parent based on indentation stack
-            while stack and stack[-1][0] >= indent:
+            # Find the correct parent based on indentation stack, preserving active label as base parent
+            while len(stack) > 2 and stack[-1][0] >= indent:
                 stack.pop()
 
             if not stack:
