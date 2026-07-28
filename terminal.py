@@ -1,7 +1,10 @@
+import os
 import sys
 import time
 import signal
 import readchar
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from rich.console import Console
 
 console = Console()

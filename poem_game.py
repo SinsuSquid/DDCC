@@ -1,6 +1,9 @@
 import os
+import sys
 import time
 import random
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from typing import Dict, Any
 from rich.console import Console
 from rich.panel import Panel

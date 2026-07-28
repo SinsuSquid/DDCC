@@ -1,5 +1,9 @@
+import os
+import sys
 import time
 import readchar
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from typing import List, Dict, Any, Optional
 from rich.console import Console
 from rich.panel import Panel
@@ -23,7 +27,7 @@ def display_dialogue(char_id: str, text: str, engine: Any, delay: float = 0.015)
     Displays character dialogue in a themed border box with typewriter effect.
     Supports keypress to fast-forward, auto-play, skip, and game saving.
     """
-    from state import save_game, load_game
+    from engine import save_game, load_game
 
     state = engine.state
     style_info = CHARACTER_STYLES.get(char_id, {"name": char_id, "color": "bold white", "border": "white"})
