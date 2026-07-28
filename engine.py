@@ -27,6 +27,7 @@ from state import (
     StateObject,
     ConfigMock,
     PERSISTENT_PATH,
+    CHARACTERS_DIR,
     save_persistent_data,
     load_persistent_data,
     interpolate_text,
@@ -305,9 +306,11 @@ class DDCCEngine:
         run_define(root_node)
 
     def delete_character(self, name: str):
+        clean_name = name[:-4] if name.endswith(".chr") else name
         paths = [
-            os.path.join(os.getcwd(), "DDLC-1.1.1-pc", "characters", f"{name}.chr"),
-            os.path.join(os.getcwd(), "game_scripts", f"{name}.chr")
+            os.path.join(CHARACTERS_DIR, f"{clean_name}.chr"),
+            os.path.join(os.getcwd(), "DDLC-1.1.1-pc", "characters", f"{clean_name}.chr"),
+            os.path.join(os.getcwd(), "game_scripts", f"{clean_name}.chr")
         ]
         for p in paths:
             if os.path.exists(p):
@@ -315,20 +318,34 @@ class DDCCEngine:
                     os.remove(p)
                 except Exception:
                     pass
-        console.print(f"\n[bold red]System: Character file '{name}.chr' deleted.[/]\n")
+        console.print(f"\n[bold red]System: Character file '{clean_name}.chr' deleted.[/]\n")
 
     def restore_all_characters(self, verbose: bool = False):
         chars = ["sayori.chr", "monika.chr", "natsuki.chr", "yuri.chr"]
-        char_dir = os.path.join(os.getcwd(), "DDLC-1.1.1-pc", "characters")
-        os.makedirs(char_dir, exist_ok=True)
+        os.makedirs(CHARACTERS_DIR, exist_ok=True)
         for c in chars:
-            c_path = os.path.join(char_dir, c)
+            c_path = os.path.join(CHARACTERS_DIR, c)
             if not os.path.exists(c_path):
-                try:
-                    with open(c_path, "w", encoding="utf-8") as f:
-                        f.write(f"Character file data for {c}\n")
-                except Exception:
-                    pass
+                src1 = os.path.join(os.getcwd(), "DDLC-1.1.1-pc", "characters", c)
+                src2 = os.path.join(os.getcwd(), "game_scripts", c)
+                if os.path.exists(src1):
+                    try:
+                        with open(src1, "rb") as sf, open(c_path, "wb") as tf:
+                            tf.write(sf.read())
+                    except Exception:
+                        pass
+                elif os.path.exists(src2):
+                    try:
+                        with open(src2, "rb") as sf, open(c_path, "wb") as tf:
+                            tf.write(sf.read())
+                    except Exception:
+                        pass
+                else:
+                    try:
+                        with open(c_path, "w", encoding="utf-8") as f:
+                            f.write(f"Character file data for {c}\n")
+                    except Exception:
+                        pass
         if verbose:
             console.print("\n[bold green]System: All character files restored.[/]\n")
 
