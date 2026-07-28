@@ -1691,7 +1691,6 @@ class DDCCEngine:
         options = [
             ("New Game", "new_game"),
             ("Load Game", "load_game"),
-            ("Reset Save Data", "reset_save"),
             ("Controls / Help", "help"),
             ("Exit", "exit")
         ]
@@ -1739,25 +1738,6 @@ class DDCCEngine:
                             panel.subtitle = ""
                             live.refresh()
                             read_key_safe()
-                        elif chosen_action == "reset_save":
-                            reset_text = Text()
-                            reset_text.append("⚠️ Reset All Save Data?\n\n", style="bold red")
-                            reset_text.append("This will delete savegame.json, persistent.json, and restore all character files!\n\n")
-                            reset_text.append("Press [Y] to confirm, or any other key to cancel.", style="yellow")
-                            panel.renderable = reset_text
-                            live.refresh()
-                            confirm_key = read_key_safe()
-                            if confirm_key in ("y", "Y"):
-                                for f_path in (os.path.join(os.getcwd(), "savegame.json"), PERSISTENT_PATH):
-                                    if os.path.exists(f_path):
-                                        try: os.remove(f_path)
-                                        except: pass
-                                restore_all_characters()
-                                self.init_game()
-                                reset_text = Text("\n[bold green]Save data reset to Act 1 successfully![/]\n", style="bold green")
-                                panel.renderable = reset_text
-                                live.refresh()
-                                time.sleep(1.0)
                         else:
                             running = False
         finally:
