@@ -93,10 +93,17 @@ def display_dialogue(char_id: str, text: str, engine: Any, delay: float = 0.015)
                                 state["skip_mode"] = False
                                 is_skipping = False
                                 if persistent_pt == 3:
-                                    state["persistent"].tried_skip = True
-                                    engine.jump("ch30_noskip")
-                                    engine.jumped = True
-                                    return
+                                    if not getattr(state.get("persistent"), "tried_skip", False):
+                                        state["persistent"].tried_skip = True
+                                        engine.jump("ch30_noskip")
+                                        engine.jumped = True
+                                        return
+                                    else:
+                                        panel.subtitle = " [bold red]Skipping Disabled![/] "
+                                        live.refresh()
+                                        time.sleep(0.8)
+                                        panel.subtitle = panel_subtitle
+                                        live.refresh()
                                 else:
                                     panel.subtitle = " [bold red]Skipping Disabled![/] "
                                     live.refresh()
@@ -197,9 +204,36 @@ def display_dialogue(char_id: str, text: str, engine: Any, delay: float = 0.015)
                         state["skip_mode"] = False
                         break
                     elif key in ("s", "S"):
-                        state["skip_mode"] = not state.get("skip_mode", False)
-                        state["auto_mode"] = False
-                        break
+                        config_obj = state.get("config")
+                        allow_skipping = getattr(config_obj, "allow_skipping", True) if config_obj else True
+                        persistent_pt = getattr(state.get("persistent"), "playthrough", 0)
+                        
+                        if not allow_skipping:
+                            state["skip_mode"] = False
+                            if persistent_pt == 3:
+                                if not getattr(state.get("persistent"), "tried_skip", False):
+                                    state["persistent"].tried_skip = True
+                                    engine.jump("ch30_noskip")
+                                    engine.jumped = True
+                                    return
+                                else:
+                                    panel.subtitle = " [bold red]Skipping Disabled![/] "
+                                    live.refresh()
+                                    time.sleep(0.8)
+                                    panel.subtitle = panel_subtitle
+                                    live.refresh()
+                                    continue
+                            else:
+                                panel.subtitle = " [bold red]Skipping Disabled![/] "
+                                live.refresh()
+                                time.sleep(0.8)
+                                panel.subtitle = panel_subtitle
+                                live.refresh()
+                                continue
+                        else:
+                            state["skip_mode"] = not state.get("skip_mode", False)
+                            state["auto_mode"] = False
+                            break
                     elif key in ("g", "G"):
                         save_game(engine)
                         panel.subtitle = " [bold green]Game Saved![/] "
