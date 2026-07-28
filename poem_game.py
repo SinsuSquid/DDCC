@@ -218,9 +218,10 @@ def play_poem_game(state: Dict[str, Any]):
                             
                     status_text = Text()
                     status_text.append(f"Progress: {round_num}/20\n\n", style="bold magenta")
-                    status_text.append("Recent Words:\n", style="bold dim white")
-                    for sw in recent_selections[-5:]:
-                        status_text.append(f" • {sw}\n", style="dim white")
+                    status_text.append("Selection Log:\n", style="bold yellow")
+                    for sw_word, sw_char, sw_color in recent_selections[-6:]:
+                        status_text.append(f" • {sw_word} ", style="white")
+                        status_text.append(f"({sw_char})\n", style=sw_color)
                         
                     table.add_row(words_text, status_text)
                     
@@ -235,10 +236,20 @@ def play_poem_game(state: Dict[str, Any]):
                         selected_idx = (selected_idx + 1) % 10
                     elif not IS_TTY or key in (readchar.key.ENTER, readchar.key.SPACE, "\r", "\n", " "):
                         chosen = round_words[selected_idx]
-                        sPointTotal += chosen["s"]
-                        nPointTotal += chosen["n"]
-                        yPointTotal += chosen["y"]
-                        recent_selections.append(chosen["word"])
+                        s_pts, n_pts, y_pts = chosen["s"], chosen["n"], chosen["y"]
+                        sPointTotal += s_pts
+                        nPointTotal += n_pts
+                        yPointTotal += y_pts
+                        
+                        # Determine who liked the word
+                        if sayori_active and s_pts >= max(n_pts, y_pts):
+                            reaction = ("🩵 Sayori", "sky_blue1")
+                        elif n_pts >= y_pts:
+                            reaction = ("🩷 Natsuki", "pink1")
+                        else:
+                            reaction = ("💜 Yuri", "medium_purple3")
+                            
+                        recent_selections.append((chosen["word"], reaction[0], reaction[1]))
                         running = False
     finally:
         restore_cbreak()
