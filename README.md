@@ -39,7 +39,7 @@ Whether you're in SSH sessions or just want a byte-sized poem reading experience
   * 🩷 **Natsuki**: Pastel Pink (`pink1`) — *Freshly baked aesthetics, because **Manga IS Literature!***
   * 💜 **Yuri**: Deep Purple (`purple`) — *A sharp, cutting-edge style that gets straight to the point.*
   * 💚 **Monika**: Emerald Green (`green`) — *Just Monika. Period.*
-* 📜 **Dedicated TUI Poem Reader**: Read handwritten poems (`poem_s1`, `poem_y1`, `poem_n1`, `poem_m1`) rendered inside **picture-perfect** Rich paper panels.
+* 📜 **Dedicated TUI Poem Reader**: Read handwritten poems (`poem_s1`, `poem_y1`, `poem_n1`, `poem_m1`) and special glitch poems rendered inside **picture-perfect** Rich paper panels.
 * 📖 **Ren'Py Text Tag Markup**: Automatically parses `{i}` (italics), `{b}` (bold), `{u}` (underline), `{s}` (strikethrough), and `{color=...}` tags. Unclosed tags are automatically **bound** frame-by-frame during typewriter typing!
 * 🎮 **Bottom Dialogue Quick-Menu**:
   * `[Space]` : Advance to the next line of dialogue (or **fast-forward** the pen!).
@@ -49,7 +49,7 @@ Whether you're in SSH sessions or just want a byte-sized poem reading experience
   * `[L]` : **Load Game** state from disk (don't worry, Monika didn't delete it... *yet*).
 * 📝 **In-Place Split TUI Poem Minigame**: A side-by-side split TUI layout where Sayori **bounces**, Natsuki **hops**, and Yuri **smiles** in real-time as you pick words!
 * 🎯 **In-Place TUI Decision Menus**: Make club choices without scrolling pollution! Options update in-place with `Up/Down` or `W/S` keys.
-* 🔀 **Dynamic Ren'Py Flow Control**: Evaluates dynamic Ren'Py call expressions (`call expression poemwinner[0] + "_exclusive"`) on the fly.
+* 🔀 **Dynamic Ren'Py Flow Control**: Evaluates dynamic Ren'Py call expressions (`call expression poemwinner[0] + "_exclusive"`) and `renpy.full_restart()` autoload jumps on the fly.
 * 💾 **Bulletproof JSON Save System**: Trial-tested JSON serialization that **deletes** bad save bugs before Monika can delete your character files.
 
 ---
@@ -57,7 +57,8 @@ Whether you're in SSH sessions or just want a byte-sized poem reading experience
 ## 🚀 Setup & Execution (Piece of Cake! 🧁)
 
 ### 0. Get original DDLC
-Download Doki Doki Literature Club! from [offical webpage](https://ddlc.moe)
+Download Doki Doki Literature Club! from [official webpage](https://ddlc.moe)
+
 ### 1. Prerequisites
 Ensure you have Python 3.7+ installed. Install the required dependencies:
 ```bash
@@ -72,6 +73,11 @@ DDCC/
 ├── decompile_scripts.py
 ├── engine.py
 ├── parser.py
+├── poem_game.py
+├── renpy_mock.py
+├── state.py
+├── terminal.py
+├── ui.py
 ├── screenshot/          # Memorable moments screenshots
 └── README.md
 ```
@@ -107,9 +113,14 @@ python engine.py
 
 ## 🛠️ Architecture Overview (Behind the Scenes!)
 
-* **[decompile_scripts.py](file:///home/bgkang/Projects/DDCC/decompile_scripts.py)**: Extracts `scripts.rpa`, runs `rpycdec` bytecode decompilation to `.rpy`, and cleans up output folders.
-* **[parser.py](file:///home/bgkang/Projects/DDCC/parser.py)**: Indentation-based Ren'Py syntax parser. Constructs structured AST nodes (`label`, `dialogue`, `if/elif/else`, `menu`, `call_expr`, `jump_expr`, `python_block`).
-* **[engine.py](file:///home/bgkang/Projects/DDCC/engine.py)**: Main runtime engine. Features non-blocking TTY input handling, state sandbox evaluation, Rich panel rendering, `display_poem()` TUI console, save/load serialization, and the interactive Poem writing minigame.
+* **[decompile_scripts.py](file:///home/bgkang/DDCC/decompile_scripts.py)**: Extracts `scripts.rpa`, runs `rpycdec` bytecode decompilation to `.rpy`, and cleans up output folders.
+* **[parser.py](file:///home/bgkang/DDCC/parser.py)**: Indentation-based Ren'Py syntax parser. Constructs structured AST nodes (`label`, `dialogue`, `if/elif/else`, `menu`, `call_expr`, `jump_expr`, `python_block`).
+* **[terminal.py](file:///home/bgkang/DDCC/terminal.py)**: Cross-platform terminal & TTY utilities, cbreak non-blocking keyboard input, and double Ctrl+C signal handling.
+* **[state.py](file:///home/bgkang/DDCC/state.py)**: Persistent state JSON storage (`persistent.json`), character theme colors, markup converter, and state variable resolution.
+* **[ui.py](file:///home/bgkang/DDCC/ui.py)**: Interactive Rich TUI components (`display_dialogue`, `select_choice` decision boxes, `show_main_menu`).
+* **[renpy_mock.py](file:///home/bgkang/DDCC/renpy_mock.py)**: Ren'Py runtime environment mock layer, handling `renpy.full_restart()`, `renpy.save_persistent()`, and virtual character files.
+* **[poem_game.py](file:///home/bgkang/DDCC/poem_game.py)**: Interactive TUI Poem minigame runner (`play_poem_game`) and special poem display panels (`SPECIAL_POEMS`).
+* **[engine.py](file:///home/bgkang/DDCC/engine.py)**: Core AST runtime engine loop (`DDCCEngine`), save/load game state engine logic, node execution dispatching, and main game startup menu.
 
 ---
 
