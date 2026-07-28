@@ -202,6 +202,8 @@ class DDCCEngine:
             "anticheat": 12345,
             "seen_eyes": None,
             "steam": False,
+            "clear": [False] * 10,
+            "clearall": False,
             "special_poems": specials,
         })
         load_persistent_data(persistent)

@@ -263,7 +263,7 @@ def is_json_serializable(val):
 
 def save_persistent_data(persistent_obj):
     data = {}
-    for k in ("demo", "playthrough", "ghost_menu", "anticheat", "seen_eyes", "clearall", "first_poem", "first_run", "oldversion", "deleted_saves"):
+    for k in ("demo", "playthrough", "ghost_menu", "anticheat", "seen_eyes", "clear", "clearall", "first_poem", "first_run", "oldversion", "deleted_saves"):
         if hasattr(persistent_obj, k):
             val = getattr(persistent_obj, k)
             if is_json_serializable(val):
