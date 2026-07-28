@@ -142,7 +142,14 @@ class RPYParser:
         if match:
             return ASTNode("else", line_num, {}, indent)
 
-        # 11. Dialogue
+        # 11. General commands (play, stop, queue, show, hide, scene, with, window, pause, image)
+        parts = stripped.split(None, 1)
+        if parts and parts[0] in ("play", "stop", "queue", "show", "hide", "scene", "with", "window", "pause", "image"):
+            cmd = parts[0]
+            args = parts[1] if len(parts) > 1 else ""
+            return ASTNode("command", line_num, {"cmd": cmd, "args": args}, indent)
+
+        # 12. Dialogue
         match = self.dialogue_pattern.match(stripped)
         if match:
             return ASTNode("dialogue", line_num, {
@@ -151,17 +158,10 @@ class RPYParser:
                 "text": match.group(3)
             }, indent)
 
-        # 12. Narration (quoted string on its own)
+        # 13. Narration (quoted string on its own)
         match = self.narration_pattern.match(stripped)
         if match:
             return ASTNode("narration", line_num, {"text": match.group(1)}, indent)
-
-        # 13. General commands (play music, stop sound, show, hide, scene, with, play, stop)
-        parts = stripped.split(None, 1)
-        if parts and parts[0] in ("play", "stop", "show", "hide", "scene", "with"):
-            cmd = parts[0]
-            args = parts[1] if len(parts) > 1 else ""
-            return ASTNode("command", line_num, {"cmd": cmd, "args": args}, indent)
 
         # 14. Fallback: Treat as a raw/unknown command or statement
         return ASTNode("unknown", line_num, {"raw": stripped}, indent)
@@ -219,6 +219,12 @@ class RPYParser:
                 in_python_block = True
                 python_block_node = node
                 python_block_indent = indent
+
+            # Ensure labels are always attached as top-level children under root
+            if node.node_type == "label":
+                root.add_child(node)
+                stack = [(-1, root), (indent, node)]
+                continue
 
             # Find the correct parent based on indentation stack
             while stack and stack[-1][0] >= indent:
