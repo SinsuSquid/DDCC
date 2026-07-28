@@ -44,8 +44,17 @@ class RenPyMock:
                     return valid_choices[val - 1][0]
 
     def pause(self, delay=0):
-        if delay and delay > 0:
-            time.sleep(delay)
+        if not delay or delay <= 0:
+            return
+        if getattr(self.engine.state, "get", lambda k, d: False)("skip_mode", False):
+            return
+        target_delay = min(delay, 0.5)
+        start = time.time()
+        while time.time() - start < target_delay:
+            if kbhit():
+                read_key_safe()
+                break
+            time.sleep(0.05)
 
     def full_restart(self, *args, **kwargs):
         self.engine.state["in_yuri_kill"] = False
