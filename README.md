@@ -50,7 +50,6 @@ Whether you're in SSH sessions or just want a byte-sized poem reading experience
   * `[S]` : Toggle **Skip Mode** (*fast-forward at neck-breaking speeds!*).
   * `[G]` : **Save Game** state to disk (`savegame.json`).
   * `[L]` : **Load Game** state from disk (don't worry, Monika didn't delete it... *yet*).
-* 🔀 **Act 4 Player Name Customization & Dual Endings**: Change your player name upon entering Act 4 and experience both Normal (`ch40_clearnormal`) and Special Golden (`ch40_clearall`) endings!
 * 💾 **Bulletproof JSON Save System**: Trial-tested JSON serialization that **deletes** bad save bugs before Monika can delete your character files.
 
 ---
