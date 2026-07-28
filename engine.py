@@ -458,20 +458,29 @@ class DDCCEngine:
             pass
 
     def handle_call_screen(self, screen_name: str, args_str: str):
-        from ui import display_dialog_popup, display_confirm_popup
+        from ui import display_dialogue, display_confirm_popup
         if screen_name in ("dialog", "confirm") or screen_name.startswith("dialog") or screen_name.startswith("confirm"):
             message = "Notification"
             if args_str:
-                match = re.search(r'^(?:message\s*=\s*)?["\']([^"\'\n]+)["\']', args_str.strip())
-                if not match:
-                    match = re.search(r'["\']([^"\'\n]+)["\']', args_str.strip())
-                if match:
-                    message = match.group(1).replace("\\n", "\n")
+                pos_args = []
+                kw_args = {}
+                def mock_dialog(*args, **kwargs):
+                    nonlocal pos_args, kw_args
+                    pos_args = args
+                    kw_args = kwargs
+                try:
+                    exec(f"mock_dialog({args_str})", self.state, {"mock_dialog": mock_dialog, "Return": lambda: None, "ok_action": None})
+                    if pos_args:
+                        message = str(pos_args[0])
+                    elif "message" in kw_args:
+                        message = str(kw_args["message"])
+                except Exception:
+                    message = args_str
 
             if "confirm" in screen_name:
                 self.state["_return"] = display_confirm_popup(message, self)
             else:
-                display_dialog_popup(message, self)
+                display_dialogue("m", message, self)
                 self.state["_return"] = True
         else:
             self.state["_return"] = True
