@@ -418,3 +418,67 @@ def show_main_menu() -> str:
         restore_cbreak()
 
     return chosen_action
+
+
+def display_dialog_popup(message: str, engine: Any):
+    """
+    Renders system popups/dialogs (e.g. call screen dialog) using the DDCC UI layout.
+    """
+    text = interpolate_text(message, engine.state)
+    panel = Panel(Text(text, style="bold red"), title=" [bold yellow]System Dialog[/] ", width=74)
+    set_cbreak()
+    try:
+        with Live(panel, auto_refresh=False) as live:
+            panel.subtitle = " [bold dim]Press [Space/Enter] to continue...[/bold dim] "
+            live.refresh()
+            time.sleep(0.1)
+            while IS_TTY:
+                if kbhit():
+                    key = read_key_safe()
+                    if key in (readchar.key.ENTER, readchar.key.SPACE, "\r", "\n", " "):
+                        break
+                time.sleep(0.05)
+    finally:
+        restore_cbreak()
+
+
+def display_confirm_popup(message: str, engine: Any) -> bool:
+    """
+    Renders confirmation popups (e.g. call screen confirm) using the DDCC UI layout.
+    Returns True for Yes, False for No.
+    """
+    text = interpolate_text(message, engine.state)
+    choices_text = ["Yes", "No"]
+    selected_idx = 0
+    running = True
+
+    panel = Panel(Text(text, style="bold white"), title=" [bold cyan]Confirm[/] ", width=74)
+    set_cbreak()
+    try:
+        with Live(panel, auto_refresh=False) as live:
+            while running:
+                renderable = Text()
+                renderable.append(f"{text}\n\n", style="bold yellow")
+                for idx, opt in enumerate(choices_text):
+                    if idx == selected_idx:
+                        renderable.append(f" ->  {opt} \n", style="reverse bold cyan")
+                    else:
+                        renderable.append(f"     {opt} \n")
+                panel.renderable = renderable
+                panel.subtitle = " [bold dim]Select: [Space/Enter] | Navigate: [Up/Down][/bold dim] "
+                live.refresh()
+
+                key = read_key_safe()
+                if IS_TTY and key in (readchar.key.UP, "w", "W"):
+                    selected_idx = (selected_idx - 1) % 2
+                elif IS_TTY and key in (readchar.key.DOWN, "s", "S"):
+                    selected_idx = (selected_idx + 1) % 2
+                elif not IS_TTY or key in (readchar.key.ENTER, readchar.key.SPACE, "\r", "\n", " "):
+                    running = False
+    finally:
+        restore_cbreak()
+
+    is_yes = (selected_idx == 0)
+    chosen_label = "Yes" if is_yes else "No"
+    console.print(f"[bold cyan]➤ Choice:[/] [bold white]{chosen_label}[/]\n")
+    return is_yes
