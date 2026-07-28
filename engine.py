@@ -250,6 +250,41 @@ def has_chr_file(chr_name: str) -> bool:
     return os.path.exists(path1) or os.path.exists(path2)
 
 
+def eval_condition(cond: str, state: Dict[str, Any]) -> bool:
+    if not cond:
+        return False
+    cond_clean = cond.strip()
+    eval_globals = {
+        "True": True,
+        "False": False,
+        "None": None,
+        "len": len,
+        "int": int,
+        "str": str,
+        "float": float,
+        "bool": bool,
+        "list": list,
+        "dict": dict,
+        "set": set,
+        "max": max,
+        "min": min,
+        "sum": sum,
+        "abs": abs,
+    }
+    eval_globals.update(state)
+    try:
+        res = eval(cond_clean, eval_globals)
+        return bool(res)
+    except Exception:
+        try:
+            val = resolve_state_variable(cond_clean, state)
+            if val != f"[{cond_clean}]":
+                return bool(val)
+        except Exception:
+            pass
+        return False
+
+
 class ConfigMock(StateObject):
     def __init__(self):
         super().__init__()
@@ -652,7 +687,7 @@ def play_poem_game(state: Dict[str, Any]):
     persistent_obj = state.get("persistent")
     persistent_pt = getattr(persistent_obj, "playthrough", 0) if persistent_obj else 0
 
-    if persistent_pt >= 2:
+    if persistent_pt >= 3:
         # 3rd Run / Act 3: Crashed text of Monika
         crashed_text = Text()
         crashed_text.append("J u s t  M o n i k a .\n\n", style="bold green")
@@ -999,8 +1034,6 @@ def load_game(engine: 'DDCCEngine') -> bool:
         # Trauma check: Block loading Act 1 saves (saved_pt == 0) when in Act 2/3 or when sayori.chr is deleted
         if saved_pt == 0 and (current_pt >= 1 or sayori_deleted):
             console.print("\n[bold red]Error: Save file corrupt or 'sayori.chr' is missing or corrupted.[/bold red]")
-            console.print("[bold red]System: Cannot load save state from previous timeline.[/bold red]")
-            console.print("[bold green]Monika: \"Ahaha... looks like that save file doesn't exist anymore! Let me start a new game for you~\"[/bold green]\n")
             time.sleep(2.0)
             return False
 
@@ -1515,39 +1548,42 @@ class DDCCEngine:
             else:
                 self.current_node = None  # Exit program
 
-        elif node.node_type == "if":
-            cond = node.content["condition"]
-            try:
-                res = bool(eval(cond, self.state))
-            except Exception:
-                res = False
+        if node.node_type not in ("if", "elif", "else"):
+            self.if_chain_satisfied = False
+
+        if node.node_type == "if":
+            cond = node.content.get("condition", "")
+            res = eval_condition(cond, self.state)
             if res:
                 self.if_chain_satisfied = True
-                self.block_stack.append((self.current_node, self.child_index))
+                self.block_stack.append((self.current_node, self.child_index, True))
                 self.current_node = node
                 self.child_index = 0
             else:
                 self.if_chain_satisfied = False
 
         elif node.node_type == "elif":
-            cond = node.content["condition"]
-            try:
-                res = bool(eval(cond, self.state))
-            except Exception:
-                res = False
-            if res:
-                self.if_chain_satisfied = True
-                self.block_stack.append((self.current_node, self.child_index))
-                self.current_node = node
-                self.child_index = 0
+            if self.if_chain_satisfied:
+                pass  # Chain already satisfied, skip!
             else:
-                self.if_chain_satisfied = False
+                cond = node.content.get("condition", "")
+                res = eval_condition(cond, self.state)
+                if res:
+                    self.if_chain_satisfied = True
+                    self.block_stack.append((self.current_node, self.child_index, True))
+                    self.current_node = node
+                    self.child_index = 0
+                else:
+                    self.if_chain_satisfied = False
 
         elif node.node_type == "else":
-            self.block_stack.append((self.current_node, self.child_index))
-            self.current_node = node
-            self.child_index = 0
-            self.if_chain_satisfied = False
+            if self.if_chain_satisfied:
+                pass  # Chain already satisfied, skip!
+            else:
+                self.if_chain_satisfied = True
+                self.block_stack.append((self.current_node, self.child_index, True))
+                self.current_node = node
+                self.child_index = 0
 
         elif node.node_type == "menu":
             selected = select_choice(node, self.state)
@@ -1711,7 +1747,11 @@ class DDCCEngine:
                                         continue
 
                         if self.block_stack:
-                            self.current_node, self.child_index = self.block_stack.pop()
+                            frame = self.block_stack.pop()
+                            if len(frame) == 3:
+                                self.current_node, self.child_index, self.if_chain_satisfied = frame
+                            else:
+                                self.current_node, self.child_index = frame
                             continue
                         elif self.call_stack:
                             self.current_node, self.child_index, self.block_stack = self.call_stack.pop()
