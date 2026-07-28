@@ -2,6 +2,7 @@ import os
 import re
 import sys
 import time
+import signal
 import textwrap
 import readchar
 from typing import List, Dict, Any, Optional
@@ -61,11 +62,40 @@ else:
     def kbhit():
         return False
 
+_last_ctrl_c_time = 0.0
+
+def handle_ctrl_c():
+    global _last_ctrl_c_time
+    now = time.time()
+    if now - _last_ctrl_c_time < 2.0:
+        restore_cbreak()
+        console.print("\n[bold pink1]Goodbye! Thanks for visiting the Literature Club! 🎀[/]\n")
+        sys.exit(0)
+    else:
+        _last_ctrl_c_time = now
+        console.print("\n[bold yellow]Press Ctrl+C again within 2 seconds to quit![/]")
+
+def sigint_handler(sig, frame):
+    handle_ctrl_c()
+
+try:
+    signal.signal(signal.SIGINT, sigint_handler)
+except Exception:
+    pass
+
 def read_key_safe() -> str:
     if not IS_TTY:
         time.sleep(0.01)  # Prevent CPU spinning
         return "\n"
-    return readchar.readkey()
+    try:
+        key = readchar.readkey()
+        if key == readchar.key.CTRL_C or key == "\x03":
+            handle_ctrl_c()
+            return ""
+        return key
+    except KeyboardInterrupt:
+        handle_ctrl_c()
+        return ""
 
 
 # Character names and styling
@@ -612,8 +642,40 @@ def play_poem_game(state: Dict[str, Any]):
     yPointTotal = 0.0
     recent_selections = []
     
+    # Check persistent playthrough level
+    persistent_obj = state.get("persistent")
+    persistent_pt = getattr(persistent_obj, "playthrough", 0) if persistent_obj else 0
+
+    if persistent_pt >= 2:
+        # 3rd Run / Act 3: Crashed text of Monika
+        crashed_text = Text()
+        crashed_text.append("J u s t  M o n i k a .\n\n", style="bold green")
+        crashed_text.append("M0n1k4_M0n1k4_M0n1k4_M0n1k4_M0n1k4_M0n1k4\n", style="bold red strike")
+        crashed_text.append("E R R O R :  P O E M  S Y S T E M  C O R R U P T E D .\n\n", style="bold yellow")
+        crashed_text.append("Just Monika.\nJust Monika.\nJust Monika.", style="bold green")
+
+        crashed_panel = Panel(
+            crashed_text,
+            title="[bold green]M O N I K A[/]",
+            subtitle=" [dim]Press Any Key to Continue...[/] ",
+            border_style="green",
+            width=80
+        )
+        console.print(crashed_panel)
+        time.sleep(1.0)
+        if IS_TTY:
+            set_cbreak()
+            read_key_safe()
+            restore_cbreak()
+        chapter = state.get("chapter", 0)
+        poemwinner = state.get("poemwinner", ["monika", "monika", "monika"])
+        if isinstance(poemwinner, list) and chapter < len(poemwinner):
+            poemwinner[chapter] = "monika"
+        state["poemwinner"] = poemwinner
+        console.print("\n[bold green]Just Monika.[/]\n")
+        return
+
     # Check if Sayori is active
-    persistent_pt = getattr(engine.state.get("persistent"), "playthrough", 0)
     sayori_chr_path = os.path.join(os.getcwd(), "DDLC-1.1.1-pc", "characters", "sayori.chr")
     sayori_active = (persistent_pt == 0) and os.path.exists(sayori_chr_path)
     
@@ -1603,10 +1665,15 @@ class DDCCEngine:
 
                     elif action == "new_game":
                         console.print()
-                        name_input = console.input("[bold cyan]Enter player name (default 'MC'): [/]").strip()
-                        if not name_input:
-                            name_input = "MC"
+                        import getpass
                         self.init_game()
+                        persistent_pt = getattr(self.state.get("persistent"), "playthrough", 0)
+                        if persistent_pt >= 2:
+                            name_input = getpass.getuser()
+                        else:
+                            name_input = console.input("[bold cyan]Enter player name (default 'MC'): [/]").strip()
+                            if not name_input:
+                                name_input = "MC"
                         self.state["player"] = name_input
                         console.print(f"Hello, [bold cyan]{name_input}[/]! Running game scripts...\n")
                         time.sleep(1.0)
@@ -1655,8 +1722,7 @@ class DDCCEngine:
                 console.print("\n[bold yellow]Returning to Main Menu...[/]\n")
                 time.sleep(1.2)
         except KeyboardInterrupt:
-            restore_cbreak()
-            console.print("\n[bold pink1]Game interrupted. Thanks for visiting the Literature Club! 🎀[/]\n")
+            handle_ctrl_c()
 
 
 if __name__ == "__main__":
