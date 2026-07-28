@@ -163,34 +163,6 @@ def play_poem_game(state: Dict[str, Any]):
     persistent_obj = state.get("persistent")
     persistent_pt = getattr(persistent_obj, "playthrough", 0) if persistent_obj else 0
 
-    if persistent_pt >= 3:
-        crashed_text = Text()
-        crashed_text.append("J u s t  M o n i k a .\n\n", style="bold green")
-        crashed_text.append("M0n1k4_M0n1k4_M0n1k4_M0n1k4_M0n1k4_M0n1k4\n", style="bold red strike")
-        crashed_text.append("E R R O R :  P O E M  S Y S T E M  C O R R U P T E D .\n\n", style="bold yellow")
-        crashed_text.append("Just Monika.\nJust Monika.\nJust Monika.", style="bold green")
-
-        crashed_panel = Panel(
-            crashed_text,
-            title="[bold green]M O N I K A[/]",
-            subtitle=" [dim]Press Any Key to Continue...[/] ",
-            border_style="green",
-            width=80
-        )
-        console.print(crashed_panel)
-        time.sleep(1.0)
-        if IS_TTY:
-            set_cbreak()
-            read_key_safe()
-            restore_cbreak()
-        chapter = state.get("chapter", 0)
-        poemwinner = state.get("poemwinner", ["monika", "monika", "monika"])
-        if isinstance(poemwinner, list) and chapter < len(poemwinner):
-            poemwinner[chapter] = "monika"
-        state["poemwinner"] = poemwinner
-        console.print("\n[bold green]Just Monika.[/]\n")
-        return
-
     sayori_active = (persistent_pt == 0) and has_chr_file("sayori.chr")
     
     panel = Panel(Text("Initializing..."), title="Poem Game", width=80)
@@ -199,7 +171,30 @@ def play_poem_game(state: Dict[str, Any]):
     try:
         with Live(panel, auto_refresh=False) as live:
             for round_num in range(1, 21):
-                round_words = random.sample(words, 10)
+                if persistent_pt >= 3:
+                    glitch_options = [
+                        "Just Monika", "Monika", "M0n1k4", "E R R O R", 
+                        "¡¢£¤¥¦", "Delete", "Love", "Forever", 
+                        "Just Monika", "Monika", "Noth1ng", "A1w4ys"
+                    ]
+                    round_words = [
+                        {"word": w, "s": 0, "n": 0, "y": 0, "m": 3}
+                        for w in random.sample(glitch_options, 10)
+                    ]
+                else:
+                    sampled = random.sample(words, 10)
+                    if persistent_pt in (1, 2):
+                        # 20% chance to corrupt words in Act 2
+                        corrupted = []
+                        for item in sampled:
+                            if random.random() < 0.2:
+                                corrupted.append({"word": "¡¢£¤¥¦", "s": 0, "n": item["n"], "y": item["y"], "m": 1})
+                            else:
+                                corrupted.append(item)
+                        round_words = corrupted
+                    else:
+                        round_words = sampled
+
                 selected_idx = 0
                 running = True
                 
@@ -242,7 +237,9 @@ def play_poem_game(state: Dict[str, Any]):
                         yPointTotal += y_pts
                         
                         # Determine who liked the word
-                        if sayori_active and s_pts >= max(n_pts, y_pts):
+                        if persistent_pt >= 3:
+                            reaction = ("💚 Monika", "green")
+                        elif sayori_active and s_pts >= max(n_pts, y_pts):
                             reaction = ("🩵 Sayori", "sky_blue1")
                         elif n_pts >= y_pts:
                             reaction = ("🩷 Natsuki", "pink1")
@@ -258,7 +255,9 @@ def play_poem_game(state: Dict[str, Any]):
     playthrough = state["persistent"].playthrough
     poemwinner = state.get("poemwinner", ["sayori", "sayori", "sayori"])
     
-    if playthrough == 0:
+    if playthrough >= 3:
+        winner = "monika"
+    elif playthrough == 0:
         if chapter == 1:
             ch1_choice = state.get("ch1_choice", ["sayori"])
             if ch1_choice[0] == "sayori":
