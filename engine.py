@@ -1373,20 +1373,42 @@ class DDCCEngine:
         else:
             read_key_safe()
 
-    def jump(self, label_name: str):
+    def resolve_label_name(self, label_name: str) -> str:
         if label_name.startswith("expression "):
             label_name = label_name[11:].strip()
 
-        if label_name not in self.label_registry:
-            try:
-                eval_res = str(eval(label_name, self.state))
-                if eval_res in self.label_registry:
-                    label_name = eval_res
-            except Exception:
-                pass
-
         if label_name in self.label_registry:
-            self.current_node = self.label_registry[label_name]
+            return label_name
+
+        try:
+            eval_res = str(eval(label_name, self.state))
+            if eval_res in self.label_registry:
+                return eval_res
+            elif eval_res.startswith("natsuki_exclusive2_") and "natsuki_exclusive2_1" in self.label_registry:
+                return "natsuki_exclusive2_1"
+            elif eval_res.startswith("yuri_exclusive2_") and "yuri_exclusive2_1" in self.label_registry:
+                return "yuri_exclusive2_1"
+            elif eval_res.startswith("natsuki_exclusive_") and "natsuki_exclusive_1" in self.label_registry:
+                return "natsuki_exclusive_1"
+            elif eval_res.startswith("yuri_exclusive_") and "yuri_exclusive_1" in self.label_registry:
+                return "yuri_exclusive_1"
+            elif eval_res.startswith("poem_special_"):
+                return "poem_special_1"
+            else:
+                prefix = eval_res.rsplit("_", 1)[0]
+                matches = [l for l in self.label_registry if l.startswith(prefix)]
+                if matches:
+                    return matches[0]
+        except Exception:
+            pass
+
+        return label_name
+
+    def jump(self, label_name: str):
+        resolved = self.resolve_label_name(label_name)
+
+        if resolved in self.label_registry:
+            self.current_node = self.label_registry[resolved]
             self.child_index = 0
             self.block_stack = []
             self.if_chain_satisfied = False
@@ -1395,26 +1417,15 @@ class DDCCEngine:
             raise ValueError(f"Label not found: {label_name}")
 
     def call(self, label_name: str):
-        if label_name.startswith("expression "):
-            label_name = label_name[11:].strip()
+        resolved = self.resolve_label_name(label_name)
 
-        if label_name not in self.label_registry:
-            try:
-                eval_res = str(eval(label_name, self.state))
-                if eval_res in self.label_registry:
-                    label_name = eval_res
-                elif eval_res.startswith("poem_special_"):
-                    label_name = "poem_special_1"
-            except Exception:
-                pass
-
-        if label_name == "poem":
+        if resolved == "poem":
             play_poem_game(self.state)
             return
 
-        if label_name in self.label_registry:
+        if resolved in self.label_registry:
             self.call_stack.append((self.current_node, self.child_index, list(self.block_stack)))
-            self.current_node = self.label_registry[label_name]
+            self.current_node = self.label_registry[resolved]
             self.child_index = 0
             self.block_stack = []
             self.if_chain_satisfied = False
