@@ -458,47 +458,69 @@ class DDCCEngine:
             pass
 
     def handle_call_screen(self, screen_name: str, args_str: str):
-        if screen_name == "confirm":
-            message = "Confirm choice?"
+        if screen_name in ("dialog", "confirm") or screen_name.startswith("dialog") or screen_name.startswith("confirm"):
+            message = "Notification"
             if args_str:
-                match = re.search(r'^"([^"]+)"', args_str.strip())
+                match = re.search(r'^(?:message\s*=\s*)?["\']([^"\'\n]+)["\']', args_str.strip())
+                if not match:
+                    match = re.search(r'["\']([^"\'\n]+)["\']', args_str.strip())
                 if match:
                     message = match.group(1).replace("\\n", "\n")
 
-            choices_text = ["Yes", "No"]
-            selected_idx = 0
-            running = True
+            message = interpolate_text(message, self.state)
 
-            panel = Panel(Text(message, style="bold white"), title="Notification", width=70)
-            set_cbreak()
-            try:
-                with Live(panel, auto_refresh=False) as live:
-                    while running:
-                        renderable = Text()
-                        renderable.append(f"{message}\n\n", style="bold yellow")
-                        for idx, opt in enumerate(choices_text):
-                            if idx == selected_idx:
-                                renderable.append(f" ->  {opt} \n", style="reverse bold cyan")
-                            else:
-                                renderable.append(f"     {opt} \n")
-                        panel.renderable = renderable
-                        panel.subtitle = " [bold dim]Select: [Space/Enter] | Navigate: [Up/Down][/bold dim] "
+            if "confirm" in screen_name:
+                choices_text = ["Yes", "No"]
+                selected_idx = 0
+                running = True
+
+                panel = Panel(Text(message, style="bold white"), title="Notification", width=70)
+                set_cbreak()
+                try:
+                    with Live(panel, auto_refresh=False) as live:
+                        while running:
+                            renderable = Text()
+                            renderable.append(f"{message}\n\n", style="bold yellow")
+                            for idx, opt in enumerate(choices_text):
+                                if idx == selected_idx:
+                                    renderable.append(f" ->  {opt} \n", style="reverse bold cyan")
+                                else:
+                                    renderable.append(f"     {opt} \n")
+                            panel.renderable = renderable
+                            panel.subtitle = " [bold dim]Select: [Space/Enter] | Navigate: [Up/Down][/bold dim] "
+                            live.refresh()
+
+                            key = read_key_safe()
+                            if IS_TTY and key in (readchar.key.UP, "w", "W"):
+                                selected_idx = (selected_idx - 1) % 2
+                            elif IS_TTY and key in (readchar.key.DOWN, "s", "S"):
+                                selected_idx = (selected_idx + 1) % 2
+                            elif not IS_TTY or key in (readchar.key.ENTER, readchar.key.SPACE, "\r", "\n", " "):
+                                running = False
+                finally:
+                    restore_cbreak()
+
+                is_yes = (selected_idx == 0)
+                self.state["_return"] = is_yes
+                chosen_label = "Yes" if is_yes else "No"
+                console.print(f"[bold cyan]➤ Choice:[/] [bold white]{chosen_label}[/]\n")
+            else:
+                panel = Panel(Text(message, style="bold red"), title=" [bold yellow]System Dialog[/] ", width=70)
+                set_cbreak()
+                try:
+                    with Live(panel, auto_refresh=False) as live:
+                        panel.subtitle = " [bold dim]Press [Space/Enter] to continue...[/bold dim] "
                         live.refresh()
-
-                        key = read_key_safe()
-                        if IS_TTY and key in (readchar.key.UP, "w", "W"):
-                            selected_idx = (selected_idx - 1) % 2
-                        elif IS_TTY and key in (readchar.key.DOWN, "s", "S"):
-                            selected_idx = (selected_idx + 1) % 2
-                        elif not IS_TTY or key in (readchar.key.ENTER, readchar.key.SPACE, "\r", "\n", " "):
-                            running = False
-            finally:
-                restore_cbreak()
-
-            is_yes = (selected_idx == 0)
-            self.state["_return"] = is_yes
-            chosen_label = "Yes" if is_yes else "No"
-            console.print(f"[bold cyan]➤ Choice:[/] [bold white]{chosen_label}[/]\n")
+                        time.sleep(0.1)
+                        while IS_TTY:
+                            if kbhit():
+                                key = read_key_safe()
+                                if key in (readchar.key.ENTER, readchar.key.SPACE, "\r", "\n", " "):
+                                    break
+                            time.sleep(0.05)
+                finally:
+                    restore_cbreak()
+                self.state["_return"] = True
         else:
             self.state["_return"] = True
 
