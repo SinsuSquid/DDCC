@@ -676,7 +676,7 @@ class DDCCEngine:
                         import getpass
                         self.init_game()
                         persistent_pt = getattr(self.state.get("persistent"), "playthrough", 0)
-                        if persistent_pt >= 3:
+                        if persistent_pt == 3:
                             name_input = getpass.getuser()
                         else:
                             name_input = console.input("[bold cyan]Enter player name (default 'MC'): [/]").strip()

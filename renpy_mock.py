@@ -7,6 +7,7 @@ from typing import Any
 from rich.console import Console
 
 from state import MusicMock, RandomMock, save_persistent_data
+from terminal import IS_TTY
 
 console = Console()
 
@@ -70,6 +71,14 @@ class RenPyMock:
             return
         elif playthrough == 4:
             self.engine.state["persistent"].autoload = "ch40_main"
+            if IS_TTY:
+                try:
+                    console.print()
+                    new_name = console.input("[bold cyan]Enter player name for Act 4 (default 'MC'): [/]").strip()
+                    if new_name:
+                        self.engine.state["player"] = new_name
+                except Exception:
+                    pass
             self.engine.jump("ch40_main")
             return
 
