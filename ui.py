@@ -289,6 +289,14 @@ def select_choice(menu_node: Any, state: Dict[str, Any]) -> Optional[Any]:
     Renders an interactive TUI decision box using Rich Live.
     Updates in-place without terminal scroll duplication.
     """
+    state["skip_mode"] = False
+    state["auto_mode"] = False
+    
+    if IS_TTY:
+        time.sleep(0.1)
+        while kbhit():
+            read_key_safe()
+
     prompts = []
     choices = []
     
@@ -447,6 +455,15 @@ def display_confirm_popup(message: str, engine: Any) -> bool:
     Renders confirmation popups (e.g. call screen confirm) using the DDCC UI layout.
     Returns True for Yes, False for No.
     """
+    if engine and hasattr(engine, "state"):
+        engine.state["skip_mode"] = False
+        engine.state["auto_mode"] = False
+    
+    if IS_TTY:
+        time.sleep(0.1)
+        while kbhit():
+            read_key_safe()
+
     text = interpolate_text(message, engine.state)
     choices_text = ["Yes", "No"]
     selected_idx = 0

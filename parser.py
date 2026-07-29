@@ -14,6 +14,7 @@ class ASTNode:
         self.children: List['ASTNode'] = []
 
     def add_child(self, child: 'ASTNode'):
+        child.parent = self
         self.children.append(child)
 
     def to_dict(self) -> Dict[str, Any]:

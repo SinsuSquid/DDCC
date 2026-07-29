@@ -87,7 +87,8 @@ def display_poem(poem_obj: Any, engine: Any):
     author = getattr(poem_obj, "author", "Unknown")
     text = getattr(poem_obj, "text", "")
     
-    style_info = CHARACTER_STYLES.get(author, {"color": "bold pink1", "border": "pink1"})
+    author_key = str(author).lower()
+    style_info = CHARACTER_STYLES.get(author_key, CHARACTER_STYLES.get(author, {"color": "bold pink1", "border": "pink1"}))
     
     poem_panel = Panel(
         Text(text, style="italic white"),
@@ -114,6 +115,13 @@ def display_poem(poem_obj: Any, engine: Any):
                     time.sleep(2.0)
     finally:
         restore_cbreak()
+        if engine and hasattr(engine, "state"):
+            persistent_pt = getattr(engine.state.get("persistent"), "playthrough", 0)
+            if persistent_pt != 3:
+                config_obj = engine.state.get("config")
+                if config_obj:
+                    config_obj.allow_skipping = True
+                engine.state["allow_skipping"] = True
 
 
 def handle_special_poem(args_str: str, engine: Any) -> bool:
@@ -304,3 +312,9 @@ def play_poem_game(state: Dict[str, Any]):
         console.print(f"Scores - Natsuki: {int(nPointTotal)}, Yuri: {int(yPointTotal)}")
     console.print(f"Winner: [bold cyan]{winner.capitalize()}[/]\n")
     time.sleep(1.5)
+
+    if playthrough != 3:
+        config_obj = state.get("config")
+        if config_obj:
+            config_obj.allow_skipping = True
+        state["allow_skipping"] = True

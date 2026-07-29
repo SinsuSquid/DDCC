@@ -248,7 +248,8 @@ class DDCCEngine:
         self.state["delete_character"] = self.delete_character
         self.state["restore_all_characters"] = self.restore_all_characters
         self.state["restore_relevant_characters"] = self.restore_relevant_characters
-        self.state["pause"] = self.pause
+        self.state["_history_list"] = []
+        self.state["screenshot_srf"] = lambda: None
         def fallback_glitchtext(length=20):
             import random
             chars = "¡¢£¤¥¦§¨©ª«¬®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿĀāĂăĄąĆćĈĉĊċČčĎďĐđĒēĔĕĖėĘęĚěĜĝĞğĠġĢģĤĥĦħĨĩĪīĬĭĮįİıĲĳĴĵĶķĸĹĺĻļĽľĿŀŁłŃńŅņŇňŉŊŋŌōŎŏŐőŒœŔŕŖŗŘřŚśŜŝŞşŠšŢţŤťŦŧŨũŪūŬŭŮůŰűŲųŴŵŶŷŸŹźŻżŽž"
@@ -468,14 +469,27 @@ class DDCCEngine:
                     nonlocal pos_args, kw_args
                     pos_args = args
                     kw_args = kwargs
+                
+                exec_globals = dict(self.state)
+                exec_globals["mock_dialog"] = mock_dialog
+                exec_globals["Return"] = lambda *args, **kwargs: None
+                exec_globals["ok_action"] = None
                 try:
-                    exec(f"mock_dialog({args_str})", self.state, {"mock_dialog": mock_dialog, "Return": lambda: None, "ok_action": None})
+                    exec(f"mock_dialog({args_str})", exec_globals, exec_globals)
                     if pos_args:
                         message = str(pos_args[0])
                     elif "message" in kw_args:
                         message = str(kw_args["message"])
                 except Exception:
-                    message = args_str
+                    match = re.search(r'^\s*(?:"((?:[^"\\]|\\.)*)"|\'((?:[^\'\\]|\\.)*)\')', args_str)
+                    if match:
+                        raw_msg = match.group(1) if match.group(1) is not None else match.group(2)
+                        try:
+                            message = raw_msg.encode('utf-8').decode('unicode_escape')
+                        except Exception:
+                            message = raw_msg
+                    else:
+                        message = args_str
 
             if "confirm" in screen_name:
                 self.state["_return"] = display_confirm_popup(message, self)
@@ -679,6 +693,14 @@ class DDCCEngine:
                         continue
 
                     if self.child_index >= len(self.current_node.children):
+                        parent = getattr(self.current_node, "parent", None)
+                        if parent and getattr(parent, "node_type", "") != "root" and self.current_node in parent.children:
+                            idx = parent.children.index(self.current_node)
+                            if idx + 1 < len(parent.children):
+                                self.current_node = parent
+                                self.child_index = idx + 1
+                                continue
+
                         if self.current_node.node_type == "label" and getattr(self.current_node, "filepath", None):
                             filepath = getattr(self.current_node, "filepath")
                             filename = os.path.basename(filepath)

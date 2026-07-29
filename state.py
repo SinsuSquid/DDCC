@@ -19,6 +19,10 @@ CHARACTER_STYLES = {
     "y": {"name": "Yuri", "color": "bold purple", "border": "medium_purple3"},
     "mc": {"name": "MC", "color": "bold cyan", "border": "cyan"},
     "narrator": {"name": "", "color": "italic white", "border": "grey37"},
+    "monika": {"name": "Monika", "color": "bold green", "border": "green"},
+    "sayori": {"name": "Sayori", "color": "bold sky_blue1", "border": "sky_blue1"},
+    "natsuki": {"name": "Natsuki", "color": "bold pink1", "border": "pink1"},
+    "yuri": {"name": "Yuri", "color": "bold purple", "border": "medium_purple3"},
 }
 
 PERSISTENT_PATH = os.path.join(os.getcwd(), "persistent.json")
