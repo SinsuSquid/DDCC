@@ -2,9 +2,11 @@
 
 ![](https://img.shields.io/badge/Python-3.7%2B-blue)
 ![](https://img.shields.io/badge/CLI-Critical_Loss_of_Integrity-red)
-![](https://img.shields.io/badge/Just-Monika-green)
-![](https://img.shields.io/badge/Sayo-Nara-skyblue)
-![](https://img.shields.io/badge/Manga_IS-Literature-pink)
+</br>
+![](https://img.shields.io/badge/💚_Just-Monika-green)
+![](https://img.shields.io/badge/🩵_Sayo-Nara-skyblue)
+![](https://img.shields.io/badge/🩷_Manga_IS-Literature-pink)
+![](https://img.shields.io/badge/💜_Portrait_of-Markov-purple)
 
 > *"Welcome to the Literature Club! Write your way into her heart... directly inside your favorite terminal interface."* 💚
 
@@ -20,18 +22,17 @@
 Whether you're in SSH sessions or just want a byte-sized poem reading experience, DDCC brings the full psychological horror and wholesome clubroom vibes directly to your shell.
 
 ---
-## Demo (Poem Game)
-![Poem_Demo](screenshot/Demo_Poem.gif)
 
 ## 📸 Memorable Moments
-
-> *"I gently open the door..."* (Spoiler: Don't **hang** around too long!) 💔
 
 | *"I gently open the door."* | 
 | :---: |
 | ![I gently open the door](screenshot/i_gently_open_the_door.png) |
 | *No more visual PTSD!* |
 | ![sayori.chr deleted](screenshot/sayori.chr_deleted.png) |
+| *Interactive Poem Session!* |
+| ![Poem_Demo](screenshot/Demo_Poem.gif) |
+
 
 ---
 
