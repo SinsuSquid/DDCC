@@ -20,6 +20,8 @@
 Whether you're in SSH sessions or just want a byte-sized poem reading experience, DDCC brings the full psychological horror and wholesome clubroom vibes directly to your shell.
 
 ---
+## Demo (Poem Game)
+![Poem_Demo](screenshot/Demo_Poem.gif)
 
 ## 📸 Memorable Moments
 
