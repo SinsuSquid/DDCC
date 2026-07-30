@@ -27,9 +27,11 @@ Whether you're in SSH sessions or just want a byte-sized poem reading experience
 
 > *"I gently open the door..."* (Spoiler: Don't **hang** around too long!) 💔
 
-| *"I gently open the door."* | *No more visual PTSD!* |
-| :---: | :---: |
-| ![I gently open the door](screenshot/i_gently_open_the_door.png) | ![sayori.chr deleted](screenshot/sayori.chr_deleted.png) |
+| *"I gently open the door."* | 
+| :---: |
+| ![I gently open the door](screenshot/i_gently_open_the_door.png) |
+| *No more visual PTSD!* |
+| ![sayori.chr deleted](screenshot/sayori.chr_deleted.png) |
 
 ---
 
